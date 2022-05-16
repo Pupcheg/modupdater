@@ -452,12 +452,14 @@ public final class CLI {
 
                 ModInstance latest = mod.getLatestInstance();
                 try {
-                    for (ModInstance instance : mod.getInstances()) {
+                    var instanceIterator = mod.getInstances().iterator();
+                    while (instanceIterator.hasNext()) {
+                        ModInstance instance = instanceIterator.next();
                         if (latest.equals(instance)) continue;
 
                         if (instance.getType() == latest.getType()) {
                             Files.copy(latest.getPath(), instance.getPath(), StandardCopyOption.REPLACE_EXISTING);
-                            mod.getInstances().remove(instance);
+                            instanceIterator.remove();
                         }
                     }
                     installed.add(mod);
