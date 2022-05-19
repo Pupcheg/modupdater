@@ -7,23 +7,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
 
-public record DownloadConfig(@NotNull Mod getMod, @NotNull Collection<String> getMinecraftVersions,
+public record DownloadConfig(@NotNull Mod getMod, @NotNull String getMinecraftVersion,
                              @NotNull Path getDownloadFolder,
                              @NotNull ModType getModType) {
 
     public boolean isCorrect(@Nullable SmallModInfo info) {
         return info != null &&
                 info.getSupportedModTypes().contains(getModType) &&
-                info.getSupportedMinecraftVersions().stream().anyMatch(s -> getMinecraftVersions.stream().anyMatch(s::contains));
+                info.getSupportedMinecraftVersions().stream().anyMatch(s -> s.contains(getMinecraftVersion));
     }
 
     public boolean isCorrect(@Nullable String name) {
-        return name != null && getModType.test(name) && getMinecraftVersions.stream().anyMatch(name::contains);
+        return name != null && getModType.test(name) && name.contains(getMinecraftVersion);
     }
 
 
@@ -32,17 +29,16 @@ public record DownloadConfig(@NotNull Mod getMod, @NotNull Collection<String> ge
     }
 
     public static final class Builder {
-        private final Collection<String> minecraftVersions;
+        private String minecraftVersion;
         private Mod mod;
         private Path downloadFolder;
         private ModType modType;
 
         private Builder() {
-            minecraftVersions = new HashSet<>();
         }
 
         private Builder(@NotNull Builder other) {
-            this.minecraftVersions = other.minecraftVersions;
+            this.minecraftVersion = other.minecraftVersion;
             this.mod = other.mod;
             this.downloadFolder = other.downloadFolder;
             this.modType = other.modType;
@@ -53,16 +49,8 @@ public record DownloadConfig(@NotNull Mod getMod, @NotNull Collection<String> ge
             return this;
         }
 
-        public @NotNull Builder minecraftVersions(@NotNull String minecraftVersion, @NotNull String... minecraftVersions) {
-            this.minecraftVersions.add(minecraftVersion);
-            if (minecraftVersions.length != 0) {
-                this.minecraftVersions.addAll(Arrays.asList(minecraftVersions));
-            }
-            return this;
-        }
-
-        public @NotNull Builder minecraftVersions(@NotNull Collection<String> minecraftVersions) {
-            this.minecraftVersions.addAll(minecraftVersions);
+        public @NotNull Builder minecraftVersion(@NotNull String minecraftVersion) {
+            this.minecraftVersion = minecraftVersion;
             return this;
         }
 
@@ -81,14 +69,12 @@ public record DownloadConfig(@NotNull Mod getMod, @NotNull Collection<String> ge
         }
 
         public @NotNull DownloadConfig build() {
-            if (minecraftVersions.isEmpty()) {
-                throw new IllegalStateException("Minecraft versions can't be empty");
-            }
+            Objects.requireNonNull(minecraftVersion);
             Objects.requireNonNull(mod);
             Objects.requireNonNull(downloadFolder);
             Objects.requireNonNull(modType);
 
-            return new DownloadConfig(mod, minecraftVersions, downloadFolder, modType);
+            return new DownloadConfig(mod, minecraftVersion, downloadFolder, modType);
         }
     }
 }

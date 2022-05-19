@@ -4,6 +4,7 @@ import com.therandomlabs.curseapi.CurseAPI;
 import com.therandomlabs.curseapi.file.CurseFile;
 import com.therandomlabs.curseapi.file.CurseFiles;
 import com.therandomlabs.curseapi.project.CurseProject;
+import me.supcheg.modupdater.base.Updater;
 import me.supcheg.modupdater.base.mod.Mod;
 import me.supcheg.modupdater.base.mod.ModType;
 import me.supcheg.modupdater.base.mod.SmallModInfo;
@@ -22,8 +23,8 @@ import java.util.Set;
 
 public class CurseForgeModDownloader extends ModDownloader {
 
-    public CurseForgeModDownloader() {
-        super("CurseForge", "Can download mods from https://www.curseforge.com/minecraft. Specific download data: numeric project id.");
+    public CurseForgeModDownloader(@NotNull Updater updater) {
+        super("CurseForge", "Can download mods from https://www.curseforge.com/minecraft. Specific download data: numeric project id.", updater);
     }
 
     @NotNull

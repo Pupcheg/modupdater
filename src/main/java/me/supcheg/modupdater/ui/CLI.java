@@ -270,7 +270,7 @@ public final class CLI {
         DownloadConfig.Builder downloadConfig = DownloadConfig.builder()
                 .downloadFolder(downloadFolder)
                 .modType(type)
-                .minecraftVersions(minecraftVersion);
+                .minecraftVersion(minecraftVersion);
 
         // If specified mod(-s)/downloader
         if (args.length > 0) {
@@ -388,19 +388,17 @@ public final class CLI {
                 updated.add(mod);
             } else {
                 printf("Error while downloading '%s':", mod.getName());
-                for (String s : result.getMessage()) {
-                    println(TAB + s);
-                }
+                printError(TAB, result);
                 notUpdated.add(mod);
             }
         }
 
-        printf("Updated (%d):", updated.size());
+        printf("Downloaded (%d):", updated.size());
         for (Mod mod : updated) {
             println(TAB + mod.getName());
         }
 
-        printf("Not updated (%d):", notUpdated.size());
+        printf("Not downloaded (%d):", notUpdated.size());
         for (Mod mod : notUpdated) {
             printf("%s%s (%s)", TAB, mod.getName(), mod.getDownloader().getName());
         }
@@ -423,8 +421,7 @@ public final class CLI {
                 found.add(mod);
             } else {
                 printf("Couldn't find a download url for '%s' on Modrinth or CurseForge", mod.getName());
-                for (String s : result.getMessage())
-                    println(TAB + s);
+                printError(TAB, result);
                 notFound.add(mod);
             }
         }
@@ -471,9 +468,7 @@ public final class CLI {
                 }
             } else {
                 printf("Error while downloading '%s':", mod.getName());
-                for (String s : result.getMessage()) {
-                    println(TAB + s);
-                }
+                printError(TAB, result);
                 notInstalled.add(mod);
             }
         }
@@ -561,6 +556,21 @@ public final class CLI {
 
     private static void printf(@NotNull String format, @NotNull Object... args) {
         println(format.formatted(args));
+    }
+
+    private static void printError(String prefix, DownloadResult result) {
+        if (result.isSuccess()) return;
+
+        for (String s : result.getMessage()) {
+            println(prefix + s);
+        }
+        var exception = result.getException();
+        if (exception != null) {
+            println(prefix + exception.getMessage());
+            for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+                println(prefix + stackTraceElement.toString());
+            }
+        }
     }
 
     private static void sleep() {

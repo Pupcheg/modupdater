@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.base.network.downloaders;
 
+import me.supcheg.modupdater.base.Updater;
 import me.supcheg.modupdater.base.mod.ModInstance;
 import me.supcheg.modupdater.base.network.DownloadConfig;
 import me.supcheg.modupdater.base.network.DownloadResult;
@@ -12,8 +13,8 @@ import java.nio.file.Path;
 
 public class UnknownModDownloader extends ModDownloader {
 
-    public UnknownModDownloader() {
-        super("Unknown", "Just copies the last file.");
+    public UnknownModDownloader(@NotNull Updater updater) {
+        super("Unknown", "Just copies the last file.", updater);
     }
 
     @Override

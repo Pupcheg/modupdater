@@ -42,12 +42,8 @@ public class JarFileExplorer {
     }
 
     private static @NotNull String read(@NotNull JarFile jarFile, @NotNull JarEntry entry) throws IOException {
-        try (InputStream in = jarFile.getInputStream(entry)) {
-            try (InputStreamReader reader = new InputStreamReader(in)) {
-                try (BufferedReader buf = new BufferedReader(reader)) {
-                    return buf.lines().collect(Collectors.joining("\n"));
-                }
-            }
+        try (BufferedReader buf = new BufferedReader(new InputStreamReader(jarFile.getInputStream(entry)))) {
+            return buf.lines().collect(Collectors.joining("\n"));
         }
     }
 }

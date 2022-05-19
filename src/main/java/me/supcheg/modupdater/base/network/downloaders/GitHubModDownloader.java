@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.base.network.downloaders;
 
+import me.supcheg.modupdater.base.Updater;
 import me.supcheg.modupdater.base.mod.Mod;
 import me.supcheg.modupdater.base.network.DownloadConfig;
 import me.supcheg.modupdater.base.network.DownloadResult;
@@ -24,8 +25,8 @@ public class GitHubModDownloader extends ModDownloader {
 
     private volatile GitHub github;
 
-    public GitHubModDownloader() {
-        super("GitHub", "Can download mods from https://github.com. Specific download data: repo_name.");
+    public GitHubModDownloader(@NotNull Updater updater) {
+        super("GitHub", "Can download mods from https://github.com. Specific download data: repo_name.", updater);
     }
 
     public void setToken(@NotNull String token) {

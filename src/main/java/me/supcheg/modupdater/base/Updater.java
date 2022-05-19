@@ -1,5 +1,7 @@
 package me.supcheg.modupdater.base;
 
+import me.supcheg.modupdater.base.comparator.DefaultVersionComparator;
+import me.supcheg.modupdater.base.comparator.VersionComparator;
 import me.supcheg.modupdater.base.config.Config;
 import me.supcheg.modupdater.base.mod.JarFileExplorer;
 import me.supcheg.modupdater.base.mod.Mod;
@@ -19,23 +21,25 @@ public class Updater {
     private final Map<String, ModDownloader> downloadersMap;
     private final Config config;
     private final Map<String, Mod> modsMap;
-    private final SearchingModDownloader searchingModDownloader;
+    private SearchingModDownloader searchingModDownloader;
+    private VersionComparator versionComparator;
 
     public Updater(@NotNull Config config) {
         this.config = config;
         modsMap = new HashMap<>();
         downloadersMap = new HashMap<>();
-        searchingModDownloader = new SearchingModDownloader(this);
-        addDefaultModDownloaders();
-        reloadDefaultModsFolder();
-    }
 
-    private void addDefaultModDownloaders() {
-        addDownloader(new CurseForgeModDownloader());
-        addDownloader(new GitHubModDownloader());
-        addDownloader(new ModrinthModDownloader());
+        // Defaults
+        searchingModDownloader = new SearchingModDownloader(this);
+        versionComparator = new DefaultVersionComparator();
+
+        addDownloader(new CurseForgeModDownloader(this));
+        addDownloader(new GitHubModDownloader(this));
+        addDownloader(new ModrinthModDownloader(this));
         addDownloader(searchingModDownloader);
-        addDownloader(new UnknownModDownloader());
+        addDownloader(new UnknownModDownloader(this));
+
+        reloadDefaultModsFolder();
     }
 
     public void addDownloader(@NotNull ModDownloader modDownloader) {
@@ -84,6 +88,23 @@ public class Updater {
         return searchingModDownloader;
     }
 
+    public void setSearchingModDownloader(@NotNull SearchingModDownloader searchingModDownloader) {
+        var old = this.searchingModDownloader;
+
+        this.searchingModDownloader = searchingModDownloader;
+
+        downloadersMap.remove(old.getName().toLowerCase());
+        addDownloader(this.searchingModDownloader);
+    }
+
+    public @NotNull VersionComparator getVersionComparator() {
+        return versionComparator;
+    }
+
+    public void setVersionComparator(@NotNull VersionComparator versionComparator) {
+        this.versionComparator = versionComparator;
+    }
+
     public ModDownloader findModDownloaderByName(@NotNull String name) {
         return downloadersMap.get(name.toLowerCase());
     }
@@ -128,6 +149,7 @@ public class Updater {
                 .add("downloaders=" + downloadersMap)
                 .add("mods=" + modsMap)
                 .add("config=" + config)
+                .add("versionComparator=" + versionComparator)
                 .toString();
     }
 }

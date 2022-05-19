@@ -4,6 +4,7 @@ import me.supcheg.modupdater.base.mod.ModInstance;
 import org.jetbrains.annotations.NotNull;
 
 public class DownloadResult {
+    private static final String[] EMPTY_MESSAGE = new String[0];
 
     private final ModInstance result;
     private final String[] message;
@@ -16,11 +17,11 @@ public class DownloadResult {
     }
 
     public static @NotNull DownloadResult createError(@NotNull Exception e) {
-        return new DownloadResult(null, new String[]{e.getClass().getName(), e.getMessage()}, e);
+        return new DownloadResult(null, EMPTY_MESSAGE, e);
     }
 
     public static @NotNull DownloadResult createError(@NotNull String message, @NotNull Exception e) {
-        return new DownloadResult(null, new String[]{message, e.getClass().getName(), e.getMessage()}, e);
+        return new DownloadResult(null, new String[]{message}, e);
     }
 
     public static @NotNull DownloadResult createError(@NotNull String... message) {

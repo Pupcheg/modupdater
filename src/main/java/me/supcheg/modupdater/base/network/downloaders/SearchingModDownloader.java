@@ -22,11 +22,8 @@ import java.util.List;
 public class SearchingModDownloader extends ModDownloader {
     private static final String MODRINTH_MOD = "https://modrinth.com/mod/%s";
 
-    private final Updater updater;
-
     public SearchingModDownloader(@NotNull Updater updater) {
-        super("Searching", "Trying to find a mod on Modrinth or CurseForge.");
-        this.updater = updater;
+        super("Searching", "Trying to find a mod on Modrinth or CurseForge.", updater);
     }
 
     @Override

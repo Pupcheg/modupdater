@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.base.network;
 
+import me.supcheg.modupdater.base.Updater;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -7,12 +8,18 @@ import java.util.StringJoiner;
 
 public abstract class ModDownloader {
 
-    private final String name;
-    private final String description;
+    protected final String name;
+    protected final String description;
+    protected final Updater updater;
 
-    protected ModDownloader(@NotNull String name, @NotNull String description) {
+    protected ModDownloader(@NotNull String name, @NotNull String description, @NotNull Updater updater) {
         this.name = name;
         this.description = description;
+        this.updater = updater;
+    }
+
+    public @NotNull Updater getUpdater() {
+        return updater;
     }
 
     public @NotNull String getName() {

@@ -1,6 +1,7 @@
 package me.supcheg.modupdater.base.network.downloaders;
 
 import com.google.gson.*;
+import me.supcheg.modupdater.base.Updater;
 import me.supcheg.modupdater.base.Util;
 import me.supcheg.modupdater.base.mod.Mod;
 import me.supcheg.modupdater.base.mod.ModType;
@@ -28,12 +29,10 @@ public class ModrinthModDownloader extends ModDownloader {
     public static final String PROJECT = API + "project/%s";
     public static final String SEARCH = API + "search?query=%s&limit=1";
 
-    // Comparators
-    private final Comparator<JsonObject> reversedVersionComparator;
     private final Comparator<JsonObject> fileComparator;
 
-    public ModrinthModDownloader() {
-        super("Modrinth", "Can download mods from https://modrinth.com. Specific download data: projectId (like 'sodium' or 'appleskin').");
+    public ModrinthModDownloader(@NotNull Updater updater) {
+        super("Modrinth", "Can download mods from https://modrinth.com. Specific download data: projectId (like 'sodium' or 'appleskin').", updater);
 
         this.fileComparator = (o1, o2) -> {
             boolean b1 = o1.get("primary").getAsBoolean();
@@ -44,17 +43,6 @@ public class ModrinthModDownloader extends ModDownloader {
             }
             return b1 ? 1 : -1;
         };
-
-        Pattern notNumberPattern = Pattern.compile("[^0-9]");
-        Comparator<JsonObject> versionComparator = Comparator.comparing(jsonObject -> {
-            try {
-                return Integer.parseInt(notNumberPattern.matcher(jsonObject.get("version_number").getAsString()).replaceAll(""));
-            } catch (Exception e) {
-                return 0;
-            }
-        });
-        this.reversedVersionComparator = versionComparator.reversed();
-
     }
 
     private static @NotNull JsonObject getProject(@NotNull String nameOrId) {
@@ -95,7 +83,8 @@ public class ModrinthModDownloader extends ModDownloader {
             for (int i = 0; i < versionsIds.size(); i++) {
                 versions.add(getVersion(versionsIds.get(i).getAsString()));
             }
-            versions.sort(reversedVersionComparator);
+            Comparator<JsonObject> comparator = updater.getVersionComparator().transform(o -> o.get("version_number").getAsString());
+            versions.sort(comparator);
 
             for (JsonObject version : versions) {
 
@@ -109,7 +98,7 @@ public class ModrinthModDownloader extends ModDownloader {
                     // Move 'primary' file(-s) to up and get
                     JsonObject fileInfo = StreamSupport.stream(version.getAsJsonArray("files").spliterator(), false)
                             .map(JsonElement::getAsJsonObject)
-                            .min(fileComparator)
+                            .max(fileComparator)
                             .orElseThrow(() -> new NullPointerException("No files"));
 
                     String fileName = fileInfo.get("filename").getAsString();
