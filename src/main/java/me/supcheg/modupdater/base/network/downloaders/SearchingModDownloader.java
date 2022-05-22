@@ -137,17 +137,6 @@ public class SearchingModDownloader extends ModDownloader {
         } catch (CurseException ignored) {
         }
 
-        // Check if the standard downloader is working fine
-        ModDownloader standard = updater.findModDownloaderForUrl(mod.getUrl());
-        if (!standard.isAlwaysTrue() && !(standard instanceof CurseForgeModDownloader) && !(standard instanceof ModrinthModDownloader)) {
-            DownloadResult result = standard.downloadLatest(downloadConfig);
-            if (result.isSuccess()) {
-                mod.setDownloader(standard);
-                // Yes, the standard downloader is working fine
-                return result;
-            }
-        }
-
         // Failed
         mod.setDownloader(updater.findModDownloaderByName("unknown"));
 
