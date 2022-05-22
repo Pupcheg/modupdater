@@ -118,4 +118,9 @@ public class ModrinthModDownloader extends ModDownloader {
             return DownloadResult.createError(e);
         }
     }
+
+    @Override
+    public boolean isAlwaysTrue() {
+        return false;
+    }
 }

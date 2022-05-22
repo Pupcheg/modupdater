@@ -124,4 +124,9 @@ public class GitHubModDownloader extends ModDownloader {
         Files.delete(temp);
         return DownloadResult.createSuccess(mod.createInstance(download));
     }
+
+    @Override
+    public boolean isAlwaysTrue() {
+        return false;
+    }
 }

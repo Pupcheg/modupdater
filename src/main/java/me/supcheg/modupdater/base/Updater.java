@@ -111,9 +111,7 @@ public class Updater {
 
     public @NotNull ModDownloader findModDownloaderForUrl(@NotNull String url, boolean allowCurseForge) {
         for (ModDownloader downloader : getModDownloaders()) {
-            // check is always true
-            if (!downloader.canDownload("") && downloader.canDownload(url)) {
-
+            if (!downloader.isAlwaysTrue() && downloader.canDownload(url)) {
                 // CurseForge has download limit, try to find another downloader
                 if (!allowCurseForge && downloader instanceof CurseForgeModDownloader) continue;
 

@@ -30,6 +30,10 @@ public abstract class ModDownloader {
         return description;
     }
 
+    public boolean isAlwaysTrue() {
+        return canDownload("");
+    }
+
     public boolean canDownload(@NotNull String url) {
         return url.toLowerCase().contains(getName().toLowerCase());
     }

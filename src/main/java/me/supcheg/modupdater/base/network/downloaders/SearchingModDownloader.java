@@ -67,7 +67,7 @@ public class SearchingModDownloader extends ModDownloader {
                     // It must be an error
                     // Return unsuccessful DownloadResult, because it will throw StackOverFlow
                     return DownloadResult.createError(
-                            "Updater#findModDownloaderForUrl(String) returns SearchingModDownloader instance for " + url,
+                            "Updater#findModDownloaderForUrl returns SearchingModDownloader instance for " + url,
                             "Used Updater instance: " + updater
                     );
                 }
@@ -89,6 +89,13 @@ public class SearchingModDownloader extends ModDownloader {
             }
         }
 
+        ModDownloader standard = updater.findModDownloaderForUrl(mod.getUrl(), true);
+        if (!(standard instanceof SearchingModDownloader)) {
+            updater.getConfig().setCustomUrl(mod, mod.getUrl());
+            mod.setDownloader(standard);
+            return standard.downloadLatest(downloadConfig);
+        }
+
         DownloadResult curseForgeDownloadResult = null;
         try {
             CurseSearchQuery query = new CurseSearchQuery()
@@ -100,18 +107,13 @@ public class SearchingModDownloader extends ModDownloader {
                 for (CurseProject curseProject : optionalProjects.get()) {
                     String url = curseProject.url().toString();
 
-                    ModDownloader curseForge = updater.findModDownloaderByName("curseforge");
-                    if (curseForge == null) {
-                        return DownloadResult.createError("CurseForgeModDownloader is null.",
-                                "Used Updater instance: " + updater
-                        );
-                    }
+                    ModDownloader curseForge = updater.findModDownloaderForUrl(url, true);
                     if (curseForge instanceof SearchingModDownloader) {
                         // SearchingModDownloader
                         // It must be an error
-                        // Return unsuccessful DownloadResult, because it will throw StackOverFlow
+                        // Return unsuccessful DownloadResult, otherwise it will throw StackOverFlowException
                         return DownloadResult.createError(
-                                "Updater#findModDownloaderByName(String) returns SearchingModDownloader instance with name: 'curseforge'.",
+                                "Updater#findModDownloaderForUrl returns SearchingModDownloader instance for " + url,
                                 "Used Updater instance: " + updater
                         );
                     }
@@ -137,8 +139,7 @@ public class SearchingModDownloader extends ModDownloader {
 
         // Check if the standard downloader is working fine
         ModDownloader standard = updater.findModDownloaderForUrl(mod.getUrl());
-        boolean alwaysTrue = standard.canDownload("");
-        if (!alwaysTrue && !(standard instanceof CurseForgeModDownloader) && !(standard instanceof ModrinthModDownloader)) {
+        if (!standard.isAlwaysTrue() && !(standard instanceof CurseForgeModDownloader) && !(standard instanceof ModrinthModDownloader)) {
             DownloadResult result = standard.downloadLatest(downloadConfig);
             if (result.isSuccess()) {
                 mod.setDownloader(standard);
@@ -168,5 +169,10 @@ public class SearchingModDownloader extends ModDownloader {
         }
 
         return DownloadResult.createError(message.toArray(String[]::new));
+    }
+
+    @Override
+    public boolean isAlwaysTrue() {
+        return true;
     }
 }

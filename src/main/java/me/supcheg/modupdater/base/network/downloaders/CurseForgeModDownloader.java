@@ -82,4 +82,9 @@ public class CurseForgeModDownloader extends ModDownloader {
             return DownloadResult.createError(e);
         }
     }
+
+    @Override
+    public boolean isAlwaysTrue() {
+        return false;
+    }
 }
