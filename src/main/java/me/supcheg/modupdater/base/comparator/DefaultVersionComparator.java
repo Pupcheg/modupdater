@@ -3,76 +3,40 @@ package me.supcheg.modupdater.base.comparator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.function.IntSupplier;
 import java.util.regex.Pattern;
 
 public class DefaultVersionComparator extends VersionComparator {
 
-    private final Pattern numberPattern;
     private final Pattern notNumberPattern;
 
     public DefaultVersionComparator() {
-        this.numberPattern = Pattern.compile("\\d");
         this.notNumberPattern = Pattern.compile("\\D");
     }
 
     @Override
-    public int compare(String version1string, String version2string) {
-        Objects.requireNonNull(version1string, "The first version is null");
-        Objects.requireNonNull(version2string, "The second version is null");
+    public int compare(String version1, String version2) {
+        Objects.requireNonNull(version1, "The first version is null");
+        Objects.requireNonNull(version2, "The second version is null");
 
-        version1string = version1string.trim().toLowerCase();
-        version2string = version2string.trim().toLowerCase();
+        version1 = version1.trim().toLowerCase();
+        version2 = version2.trim().toLowerCase();
 
-        if (version1string.equals(version2string)) {
+        if (version1.equals(version2)) {
             return 0;
         }
 
-        if (numberPattern.matcher(version1string).matches() && numberPattern.matcher(version2string).matches()) {
-            System.out.println(version1string + " and " + version2string + " are numbers");
-            return Integer.compare(asInt(version1string), asInt(version2string));
-        }
+        return asVersionInfo(version1).compareTo(asVersionInfo(version2));
+    }
 
-        int ver1length = version1string.length();
-        int ver2length = version2string.length();
+    @NotNull
+    private VersionInfo asVersionInfo(@NotNull String versionString) {
+        String[] split = versionString.split("\\.");
+        int major = asInt(split[0]);
+        int minor = split.length > 1 ? asInt(split[1]) : 0;
+        int maintenance = split.length > 2 ? asInt(split[2]) : 0;
 
-        if (ver1length != ver2length &&
-                // Check is version string ends with not-number. Like 'x.x.x-release'
-                numberPattern.matcher(version1string.substring(ver1length - 1)).matches() &&
-                numberPattern.matcher(version2string.substring(ver2length - 1)).matches()) {
-            if (ver1length > ver2length) {
-                version2string = append(version2string, ver1length);
-            } else {
-                version1string = append(version1string, ver2length);
-            }
-        }
-
-        VersionInfo version1 = new VersionInfo(version1string);
-        VersionInfo version2 = new VersionInfo(version2string);
-
-        int comparedInts = Integer.compare(version1.intValue, version2.intValue);
-
-        if (comparedInts == 0) {
-            version1.initAdditional();
-            version2.initAdditional();
-
-            if (version1.isRelease && version2.isRelease) {
-                return 0;
-            } else if (version1.isRelease) {
-                return 1;
-            } else if (version2.isRelease) {
-                return -1;
-            } else if (version1.isBeta && version2.isBeta) {
-                return 0;
-            } else if (version1.isBeta && version2.isAlpha) {
-                return 1;
-            } else if (version1.isAlpha && version2.isBeta) {
-                return -1;
-            }
-            return 0;
-
-        } else {
-            return comparedInts;
-        }
+        return new VersionInfo(versionString, major, minor, maintenance);
     }
 
     // 1.2.0       -> 120
@@ -86,41 +50,89 @@ public class DefaultVersionComparator extends VersionComparator {
         }
     }
 
-    @NotNull
-    private String append(@NotNull String string, int expected) {
-        int ver1length = string.length();
-        StringBuilder version1stringBuilder = new StringBuilder(string);
-        do {
-            version1stringBuilder.append(".0");
-            ver1length += 2;
-        } while (expected > ver1length);
-        return version1stringBuilder.toString();
-    }
-
     @Override
     public String toString() {
         return "DefaultVersionComparator{}";
     }
 
-    private final class VersionInfo {
+    public static final class VersionInfo implements Comparable<VersionInfo> {
 
-        private final String stringValue;
-        private final int intValue;
+        private final String full;
+        private final int major;
+        private final int minor;
+        private final int maintenance;
+
         private boolean isAlpha;
         private boolean isBeta;
         private boolean isRelease;
 
-        private VersionInfo(String stringValue) {
-            this.stringValue = stringValue;
-            this.intValue = asInt(stringValue);
+        private VersionInfo(String full, int major, int minor, int maintenance) {
+            this.full = full;
+            this.major = major;
+            this.minor = minor;
+            this.maintenance = maintenance;
         }
 
         private void initAdditional() {
-            this.isAlpha = stringValue.contains(ALPHA) || stringValue.contains(SNAPSHOT);
-            this.isBeta = stringValue.contains(BETA);
-            this.isRelease = stringValue.contains(RELEASE) || (!isAlpha && !isBeta);
+            this.isAlpha = full.contains(ALPHA) || full.contains(SNAPSHOT);
+            this.isBeta = full.contains(BETA);
+            this.isRelease = full.contains(RELEASE) || (!isAlpha && !isBeta);
         }
 
+        @Override
+        public int compareTo(@NotNull VersionInfo other) {
+            return new ComparingBuilder()
+                    .compare(this.major, other.major)
+                    .compare(this.minor, other.minor)
+                    .compare(this.maintenance, other.maintenance)
+                    .add(() -> {
+                        this.initAdditional();
+                        other.initAdditional();
+
+                        if (this.isRelease && other.isRelease) {
+                            return 0;
+                        } else if (this.isRelease) {
+                            return 1;
+                        } else if (other.isRelease) {
+                            return -1;
+                        } else if (this.isBeta && other.isBeta) {
+                            return 0;
+                        } else if (this.isBeta && other.isAlpha) {
+                            return 1;
+                        } else if (this.isAlpha && other.isBeta) {
+                            return -1;
+                        }
+                        return 0;
+                    })
+                    .build();
+        }
     }
 
+    private static final class ComparingBuilder {
+        private int comparingResult;
+
+        public @NotNull ComparingBuilder compare(int x, int y) {
+            if (comparingResult == 0) {
+                int c = Integer.compare(x, y);
+                if (c != 0) {
+                    comparingResult = c;
+                }
+            }
+            return this;
+        }
+
+        public @NotNull ComparingBuilder add(@NotNull IntSupplier supplier) {
+            if (comparingResult == 0) {
+                int x = supplier.getAsInt();
+                if (x != 0) {
+                    comparingResult = x;
+                }
+            }
+            return this;
+        }
+
+        public int build() {
+            return comparingResult;
+        }
+    }
 }
