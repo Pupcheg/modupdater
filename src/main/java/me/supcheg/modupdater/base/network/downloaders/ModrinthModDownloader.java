@@ -1,9 +1,12 @@
 package me.supcheg.modupdater.base.network.downloaders;
 
+import com.google.common.hash.Hashing;
+import com.google.common.io.MoreFiles;
 import com.google.gson.*;
 import me.supcheg.modupdater.base.Updater;
 import me.supcheg.modupdater.base.Util;
 import me.supcheg.modupdater.base.mod.Mod;
+import me.supcheg.modupdater.base.mod.ModInstance;
 import me.supcheg.modupdater.base.mod.ModType;
 import me.supcheg.modupdater.base.mod.SmallModInfo;
 import me.supcheg.modupdater.base.network.DownloadConfig;
@@ -19,7 +22,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.StreamSupport;
 
 public class ModrinthModDownloader extends ModDownloader {
@@ -96,7 +98,7 @@ public class ModrinthModDownloader extends ModDownloader {
 
                 if (downloadConfig.isCorrect(info)) {
                     // Move 'primary' file(-s) to up and get
-                    JsonObject fileInfo = StreamSupport.stream(version.getAsJsonArray("files").spliterator(), false)
+                    JsonObject fileInfo = Util.stream(version.getAsJsonArray("files"))
                             .map(JsonElement::getAsJsonObject)
                             .max(fileComparator)
                             .orElseThrow(() -> new NullPointerException("No files"));
@@ -104,9 +106,27 @@ public class ModrinthModDownloader extends ModDownloader {
                     String fileName = fileInfo.get("filename").getAsString();
                     String url = fileInfo.get("url").getAsString();
 
-                    try (InputStream in = new URL(url).openStream()) {
-                        Path savePath = downloadConfig.getDownloadFolder().resolve(fileName);
+                    JsonObject hashes = fileInfo.getAsJsonObject("hashes");
 
+                    Path savePath = downloadConfig.getDownloadFolder().resolve(fileName);
+
+                    if (hashes != null) {
+                        JsonElement sha512el = hashes.get("sha512");
+                        if (sha512el != null) {
+                            // File has sha512 hash, check if we have downloaded the same
+                            String sha512 = sha512el.getAsString();
+                            for (ModInstance instance : mod.getInstances()) {
+                                Path path = instance.getPath();
+                                String localSha512 = MoreFiles.asByteSource(path).hash(Hashing.sha512()).toString();
+                                if (localSha512.equals(sha512)) {
+                                    Files.copy(path, savePath, StandardCopyOption.REPLACE_EXISTING);
+                                    return DownloadResult.createSuccess(mod.createInstance(savePath));
+                                }
+                            }
+                        }
+                    }
+
+                    try (InputStream in = new URL(url).openStream()) {
                         Files.copy(in, savePath, StandardCopyOption.REPLACE_EXISTING);
 
                         return DownloadResult.createSuccess(mod.createInstance(savePath));

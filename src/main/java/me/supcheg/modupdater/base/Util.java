@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class Util {
 
@@ -34,6 +35,11 @@ public class Util {
                 .build();
 
         OkHttpUtils.setClient(newClient);
+    }
+
+    @NotNull
+    public static <T> Stream<T> stream(@NotNull Iterable<T> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false);
     }
 
     public static @NotNull List<String> asList(@NotNull JsonArray array) {

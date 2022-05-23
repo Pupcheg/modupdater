@@ -1,5 +1,6 @@
 # User-specific stuff
-fabric/.idea/
+/.idea
+/gradle
 
 *.iml
 *.ipr

@@ -9,7 +9,6 @@ import me.supcheg.modupdater.base.mod.ModType;
 import me.supcheg.modupdater.base.network.DownloadConfig;
 import me.supcheg.modupdater.base.network.DownloadResult;
 import me.supcheg.modupdater.base.network.ModDownloader;
-import me.supcheg.modupdater.base.network.downloaders.GitHubModDownloader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,8 +22,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.requireNonNull;
 
 public final class CLI {
 
@@ -52,10 +49,6 @@ public final class CLI {
         config = new JsonConfig(configPath);
         updater = new Updater(config);
         commands = new TreeMap<>();
-        String githubToken = config.get("github_token");
-        if (githubToken != null) {
-            ((GitHubModDownloader) updater.findModDownloaderByName("github")).setToken(githubToken);
-        }
 
         defaultCommand = new RunnableCommand("", "", "", EMPTY_ARGS, () -> println("Unknown command. Type 'help' to get help."));
 
@@ -338,14 +331,26 @@ public final class CLI {
         config.set("mods_type", modsType.getName());
 
         println("Specify the minecraft version:");
-        String minecraftVersion = input();
-        if (!minecraftVersion.trim().isEmpty()) config.set("minecraft_version", minecraftVersion);
+        String minecraftVersion = null;
+        do {
+            String input = input().trim();
+            if (input.isEmpty()) {
+                continue;
+            }
+            String[] split = input.split("\\.");
+            if (split.length == 1) {
+                println("Incorrect version format");
+                continue;
+            }
+            minecraftVersion = split[0] + split[1];
+
+        } while (minecraftVersion == null);
+        config.set("minecraft_version", minecraftVersion);
 
         println("Specify the GitHub token (you can get it at https://github.com/settings/tokens):");
-        String githubToken = input();
-        if (!githubToken.trim().isEmpty()) {
+        String githubToken = input().trim();
+        if (!githubToken.isEmpty()) {
             config.set("github_token", githubToken);
-            ((GitHubModDownloader) updater.findModDownloaderByName("github")).setToken(githubToken);
         }
         updater.reloadDefaultModsFolder();
     }

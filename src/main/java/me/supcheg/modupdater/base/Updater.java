@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Updater {
 
@@ -56,8 +57,11 @@ public class Updater {
 
     public void loadMods(@NotNull Path modsPath) throws IOException {
         modsMap.clear();
-        //noinspection resource
-        for (Path modPath : Files.list(modsPath).toList()) {
+        Set<Path> mods;
+        try (var stream = Files.list(modsPath)) {
+            mods = stream.collect(Collectors.toSet());
+        }
+        for (Path modPath : mods) {
             ModDescription description = JarFileExplorer.getDescription(modPath);
 
             Mod mod = modsMap.get(description.getName().toLowerCase());

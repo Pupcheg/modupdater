@@ -1,6 +1,7 @@
 package me.supcheg.modupdater.base.network.downloaders;
 
 import me.supcheg.modupdater.base.Updater;
+import me.supcheg.modupdater.base.Util;
 import me.supcheg.modupdater.base.mod.Mod;
 import me.supcheg.modupdater.base.network.DownloadConfig;
 import me.supcheg.modupdater.base.network.DownloadResult;
@@ -16,34 +17,46 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Predicate;
+import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 public class GitHubModDownloader extends ModDownloader {
 
+    private final Predicate<String> notContainsPredicate;
     private volatile GitHub github;
 
     public GitHubModDownloader(@NotNull Updater updater) {
         super("GitHub", "Can download mods from https://github.com. Specific download data: repo_name.", updater);
-    }
 
-    public void setToken(@NotNull String token) {
-        synchronized (this) {
-            try {
-                github = GitHubBuilder.fromEnvironment().withOAuthToken(token).build();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        var blacklist = Set.of("source", "src", "dev", "api");
+        notContainsPredicate = s -> {
+            s = s.trim().toLowerCase();
+            for (String black : blacklist) {
+                if (s.contains(black))
+                    return false;
             }
-        }
+            return true;
+        };
     }
 
     private @NotNull GitHub getGithub() {
         if (github == null) {
             synchronized (this) {
                 if (github == null) {
-                    throw new IllegalStateException("GitHub token is not set");
+                    try {
+                        String token = updater.getConfig().get("github_token");
+                        if (token == null) {
+                            throw new IllegalStateException("'github_token' is not set in the config");
+                        }
+                        github = GitHubBuilder.fromEnvironment().withOAuthToken(token).build();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }
@@ -59,18 +72,17 @@ public class GitHubModDownloader extends ModDownloader {
 
             GHRepository repo = getGithub().getRepository(repoName);
 
-            for (GHArtifact artifact : repo.listArtifacts().toList()) {
+            for (GHArtifact artifact : repo.listArtifacts()) {
                 DownloadResult result = artifact.download(i -> downloadFromArtifact(mod, downloadConfig, i));
                 if (result.isSuccess()) {
                     return result;
                 }
             }
 
-            GHRelease release = repo.getLatestRelease();
-            if (release != null) {
-                Optional<GHAsset> assetOptional = release.listAssets().toList().stream()
+            for (GHRelease release : repo.listReleases()) {
+                Optional<GHAsset> assetOptional = Util.stream(release.listAssets())
                         .filter(g -> downloadConfig.isCorrect(g.getName()))
-                        .filter(a -> !a.getName().contains("source"))
+                        .filter(a -> notContainsPredicate.test(a.getName()))
                         .findFirst();
 
                 if (assetOptional.isPresent()) {
@@ -97,10 +109,7 @@ public class GitHubModDownloader extends ModDownloader {
         try (ZipInputStream in = new ZipInputStream(new FileInputStream(temp.toFile()))) {
             while ((entry = in.getNextEntry()) != null) {
                 String name = entry.getName();
-                if (downloadConfig.isCorrect(name) &&
-                        !name.contains("sources") &&
-                        !name.contains("dev") &&
-                        !name.contains("api")) {
+                if (downloadConfig.isCorrect(name) && notContainsPredicate.test(name)) {
                     break;
                 }
             }
