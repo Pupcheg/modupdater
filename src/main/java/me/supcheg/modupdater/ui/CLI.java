@@ -263,14 +263,10 @@ public final class CLI {
 
     // Commands
     private void genericFunctionWithModCollection(@NotNull String[] args, @NotNull BiConsumer<DownloadConfig.Builder, Collection<Mod>> consumer) {
-        ModType type = ModType.valueOf(requireNonNull(config.get("mods_type")).toUpperCase());
-        String minecraftVersion = requireNonNull(config.get("minecraft_version"));
-
-        Path downloadFolder = Path.of(requireNonNull(config.get("download_folder")));
         DownloadConfig.Builder downloadConfig = DownloadConfig.builder()
-                .downloadFolder(downloadFolder)
-                .modType(type)
-                .minecraftVersion(minecraftVersion);
+                .downloadFolder(config.getModsFolder())
+                .modType(config.getModsType())
+                .minecraftVersion(config.getMinecraftVersion());
 
         // If specified mod(-s)/downloader
         if (args.length > 0) {

@@ -47,15 +47,11 @@ public class Updater {
     }
 
     public void reloadDefaultModsFolder() {
-        Optional.ofNullable(config.get("mods_folder"))
-                .map(Path::of)
-                .ifPresent(path -> {
-                    try {
-                        loadMods(path);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
+        try {
+            loadMods(config.getModsFolder());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void loadMods(@NotNull Path modsPath) throws IOException {

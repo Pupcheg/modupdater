@@ -5,11 +5,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.supcheg.modupdater.base.Util;
 import me.supcheg.modupdater.base.mod.Mod;
+import me.supcheg.modupdater.base.mod.ModType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class JsonConfig implements Config {
 
@@ -26,6 +28,24 @@ public class JsonConfig implements Config {
         if (b2) jsonObject.add("specific_data", new JsonObject());
         if (b1 || b2) save();
 
+    }
+
+    @NotNull
+    @Override
+    public Path getModsFolder() {
+        return Path.of(Objects.requireNonNull(get("mods_folder")));
+    }
+
+    @NotNull
+    @Override
+    public String getMinecraftVersion() {
+        return Objects.requireNonNull(get("minecraft_version"));
+    }
+
+    @NotNull
+    @Override
+    public ModType getModsType() {
+        return ModType.valueOf(Objects.requireNonNull(get("mods_type")).toUpperCase());
     }
 
     @Override
