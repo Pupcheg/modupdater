@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group rootProject.group
+version rootProject.version
+
+compileJava.options.encoding = 'UTF-8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://jitpack.io"
+    }
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.9.0'
+    implementation 'org.kohsuke:github-api:1.306'
+    implementation 'com.github.TheRandomLabs:CurseAPI:master-SNAPSHOT'
+    implementation 'com.google.guava:guava:31.1-jre'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+test {
+    useJUnitPlatform()
+}
