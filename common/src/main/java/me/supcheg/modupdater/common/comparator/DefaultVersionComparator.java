@@ -11,7 +11,7 @@ public class DefaultVersionComparator extends VersionComparator {
     private final Pattern notNumberPattern;
 
     public DefaultVersionComparator() {
-        this.notNumberPattern = Pattern.compile("\\D");
+        this.notNumberPattern = Pattern.compile("[!A-z]+");
     }
 
     @Override
@@ -31,7 +31,14 @@ public class DefaultVersionComparator extends VersionComparator {
 
     @NotNull
     private VersionInfo asVersionInfo(@NotNull String versionString) {
-        String[] split = versionString.split("\\.");
+        String[] split = notNumberPattern.split(versionString);
+
+        if (split.length > 3) {
+            String[] newSplit = new String[3];
+            System.arraycopy(split, split.length - 3, newSplit, 0, newSplit.length);
+            split = newSplit;
+        }
+
         int major = asInt(split[0]);
         int minor = split.length > 1 ? asInt(split[1]) : 0;
         int maintenance = split.length > 2 ? asInt(split[2]) : 0;
@@ -41,7 +48,7 @@ public class DefaultVersionComparator extends VersionComparator {
 
     private int asInt(@NotNull String version) {
         try {
-            return Integer.parseInt(notNumberPattern.matcher(version).replaceAll(""));
+            return Integer.parseInt(version.trim());
         } catch (Exception e) {
             return 0;
         }
