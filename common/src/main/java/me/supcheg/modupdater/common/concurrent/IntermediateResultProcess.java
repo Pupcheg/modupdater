@@ -14,6 +14,11 @@ import java.util.function.Function;
 public class IntermediateResultProcess<I, R> {
 
     @NotNull
+    public static <I, R> IntermediateResultProcess<I, R> completed(@NotNull Class<I> intermediateResultClass, R result) {
+        return new IntermediateResultProcess<>(result);
+    }
+
+    @NotNull
     @Contract(value = "_, _ -> new", pure = true)
     public static <I, R> Builder<I, R> builder(@Nullable Class<I> intermediateResultClass, @Nullable Class<R> resultClass) {
         return new Builder<>();
@@ -30,6 +35,13 @@ public class IntermediateResultProcess<I, R> {
 
     private final ChangeConsumer<I> onChange;
     private final Function<Exception, R> exceptionallyResult;
+
+    private IntermediateResultProcess(@NotNull R result) {
+        onChange = null;
+        exceptionallyResult = null;
+
+        this.completableFuture = CompletableFuture.completedFuture(result);
+    }
 
 
     private IntermediateResultProcess(@NotNull Builder<I, R> builder) {

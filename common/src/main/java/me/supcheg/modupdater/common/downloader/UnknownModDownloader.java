@@ -15,7 +15,7 @@ import java.nio.file.Path;
 public class UnknownModDownloader extends ModDownloader {
 
     public UnknownModDownloader(@NotNull Updater updater) {
-        super("Unknown", "Just copies the last file.", updater);
+        super("Unknown", updater);
     }
 
     @Override

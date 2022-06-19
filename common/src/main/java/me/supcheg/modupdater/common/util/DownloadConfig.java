@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.common.util;
 
+import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.config.Config;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.mod.ModType;
@@ -11,7 +12,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public class DownloadConfig {
+public class DownloadConfig implements UpdaterHolder {
 
     private final Mod mod;
     private final String minecraftVersion;
@@ -50,6 +51,12 @@ public class DownloadConfig {
 
     public boolean isCorrect(@Nullable String name) {
         return name != null && modType.notContainsOpposite(name) && name.contains(minecraftVersion);
+    }
+
+    @Nullable
+    @Override
+    public Updater getUpdater() {
+        return mod.getUpdater();
     }
 
     @Override

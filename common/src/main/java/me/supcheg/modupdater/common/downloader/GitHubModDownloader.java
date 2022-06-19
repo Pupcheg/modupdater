@@ -31,7 +31,7 @@ public class GitHubModDownloader extends ModDownloader {
     private volatile GitHub github;
 
     public GitHubModDownloader(@NotNull Updater updater) {
-        super("GitHub", "Can download mods from https://github.com. Specific download data: repo_name.", updater);
+        super("GitHub", updater);
 
         var blacklist = Set.of("source", "src", "dev", "api");
         notContainsPredicate = s -> {
@@ -69,9 +69,7 @@ public class GitHubModDownloader extends ModDownloader {
                                             @NotNull DownloadConfig downloadConfig) {
         try {
             Mod mod = downloadConfig.getMod();
-            String repoName = mod.getSpecificDownloadData() == null ?
-                    Objects.requireNonNull(mod.getUrl()).substring("https://github.com/".length())
-                    : mod.getSpecificDownloadData();
+            String repoName = Objects.requireNonNull(mod.getUrl()).substring("https://github.com/".length());
 
             GHRepository repo = getGithub().getRepository(repoName);
 

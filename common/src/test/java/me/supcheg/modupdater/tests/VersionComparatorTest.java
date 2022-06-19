@@ -44,6 +44,7 @@ public class VersionComparatorTest {
 
         assertResult(comparator, "3.0.0-beta", "3.0.0-release", ComparingResult.LOWER);
         assertResult(comparator, "3.0.0", "3.0", ComparingResult.EQUALS);
+        assertResult(comparator, "1.19-3.0.0", "1.0", ComparingResult.LOWER);
     }
 
 

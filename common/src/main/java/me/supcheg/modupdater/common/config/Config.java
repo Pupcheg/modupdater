@@ -30,10 +30,5 @@ public interface Config {
 
     @Nullable
     String getCustomUrl(@NotNull Mod mod);
-
-    void setSpecificData(@NotNull Mod mod, @NotNull String value);
-
-    @Nullable
-    String getSpecificData(@NotNull Mod mod);
 }
 

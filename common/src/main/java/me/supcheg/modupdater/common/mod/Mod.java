@@ -4,6 +4,7 @@ import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.downloader.ModDownloader;
 import me.supcheg.modupdater.common.util.JarFileDescription;
 import me.supcheg.modupdater.common.util.JarFileExplorer;
+import me.supcheg.modupdater.common.util.UpdaterHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
-public class Mod {
+public class Mod implements UpdaterHolder {
 
     private final Updater updater;
 
@@ -31,7 +32,7 @@ public class Mod {
     }
 
     public @NotNull ModInstance createInstance(@NotNull Path path, @NotNull JarFileDescription description) {
-        ModInstance instance = new ModInstance(description.getVersion(), path, description.getModType());
+        ModInstance instance = new ModInstance(this, description.getVersion(), path, description.getModType());
         instances.add(instance);
         return instance;
     }
@@ -72,12 +73,10 @@ public class Mod {
         return downloader;
     }
 
-    public @Nullable String getSpecificDownloadData() {
-        return updater.getConfig().getSpecificData(this);
-    }
-
-    public void setSpecificDownloadData(@NotNull String specificData) {
-        updater.getConfig().setSpecificData(this, specificData);
+    @Nullable
+    @Override
+    public Updater getUpdater() {
+        return updater;
     }
 
     @Override

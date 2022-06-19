@@ -1,18 +1,23 @@
 package me.supcheg.modupdater.common.mod;
 
+import me.supcheg.modupdater.common.Updater;
+import me.supcheg.modupdater.common.util.UpdaterHolder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public class ModInstance {
+public class ModInstance implements UpdaterHolder {
 
+    private final Mod parent;
     private final String version;
     private final Path path;
     private final ModType type;
 
-    public ModInstance(@NotNull String version, @NotNull Path path, @NotNull ModType type) {
+    public ModInstance(@NotNull Mod parent, @NotNull String version, @NotNull Path path, @NotNull ModType type) {
+        this.parent = parent;
         this.version = version;
         this.path = path;
         this.type = type;
@@ -28,6 +33,16 @@ public class ModInstance {
 
     public @NotNull String getVersion() {
         return version;
+    }
+
+    public @NotNull Mod getParent() {
+        return parent;
+    }
+
+    @Nullable
+    @Override
+    public Updater getUpdater() {
+        return parent.getUpdater();
     }
 
     @Override

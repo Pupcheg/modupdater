@@ -9,10 +9,7 @@ import me.supcheg.modupdater.common.downloader.*;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.searcher.DefaultDownloadUrlSearcher;
 import me.supcheg.modupdater.common.searcher.DownloadUrlSearcher;
-import me.supcheg.modupdater.common.util.DownloadConfig;
-import me.supcheg.modupdater.common.util.DownloadResult;
-import me.supcheg.modupdater.common.util.JarFileDescription;
-import me.supcheg.modupdater.common.util.JarFileExplorer;
+import me.supcheg.modupdater.common.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +24,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Updater implements AutoCloseable {
+public class Updater implements AutoCloseable, UpdaterHolder {
 
     public static @NotNull Builder builder() {
         return new Builder();
@@ -55,6 +52,7 @@ public class Updater implements AutoCloseable {
     }
 
     public void addDownloader(@NotNull ModDownloader modDownloader) {
+        Util.validateSameUpdater(this, modDownloader);
         this.downloadersMap.put(modDownloader.getName().toLowerCase(), modDownloader);
     }
 
@@ -92,6 +90,7 @@ public class Updater implements AutoCloseable {
     }
 
     public void setUrlSearcher(@NotNull DownloadUrlSearcher urlSearcher) {
+        Util.validateSameUpdater(this, urlSearcher);
         this.urlSearcher = urlSearcher;
     }
 
@@ -100,6 +99,7 @@ public class Updater implements AutoCloseable {
     }
 
     public void setVersionComparator(@NotNull VersionComparator versionComparator) {
+        Util.validateSameUpdater(this, versionComparator);
         this.versionComparator = versionComparator;
     }
 
@@ -118,6 +118,7 @@ public class Updater implements AutoCloseable {
     }
 
     public @NotNull ModDownloader findModDownloaderForMod(@NotNull Mod mod) {
+        Util.validateSameUpdater(this, mod);
         String url = mod.getUrl();
         if (url == null) {
             url = urlSearcher.find(mod);
@@ -146,6 +147,10 @@ public class Updater implements AutoCloseable {
         return config;
     }
 
+    public @NotNull ExecutorService getDownloadExecutor() {
+        return downloadExecutor;
+    }
+
     public @NotNull IntermediateResultProcess<String, DownloadResult> downloadLatest(@NotNull DownloadConfig downloadConfig,
                                                                                      @Nullable ChangeConsumer<String> onChange,
                                                                                      @Nullable Consumer<DownloadResult> after) {
@@ -156,6 +161,12 @@ public class Updater implements AutoCloseable {
                 .onChange(onChange)
                 .after(after)
                 .run();
+    }
+
+    @Nullable
+    @Override
+    public Updater getUpdater() {
+        return this;
     }
 
     @Override

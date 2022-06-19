@@ -109,20 +109,6 @@ public class CLI {
                             printf("A download url is set for the '%s' mod: %s.", args[0], args[1]);
                         }),
 
-                RunnableCommand.name("Set specific download data")
-                        .usage("set-specific [mod] [value]")
-                        .description("Set specific data for the mod that takes precedence over the download link.")
-                        .aliases("set-specific", "ss")
-                        .function(args -> {
-                            if (checkArgsLength("set-specific", args.length, 2)) return;
-
-                            Mod mod = findMod(args[0]);
-                            if (mod == null) return;
-
-                            mod.setSpecificDownloadData(args[1]);
-                            printf("A download url is set for the '%s' mod: %s.", args[0], args[1]);
-                        }),
-
                 RunnableCommand.name("Info")
                         .usage("info [mod]")
                         .description("Get information about the mod.")
@@ -139,7 +125,6 @@ public class CLI {
                                     TAB + "Versions: " + Util.join(mod.getInstances().stream().map(ModInstance::getVersion)),
                                     TAB + "Types: " + Util.join(mod.getInstances().stream().map(ModInstance::getType).map(ModType::getName)),
                                     TAB + "Url: " + mod.getUrl(),
-                                    TAB + "Specific: " + (mod.getSpecificDownloadData() == null ? "[unset]" : mod.getSpecificDownloadData()),
                                     TAB + "Downloader: " + mod.getDownloader().getName(),
                                     TAB + "Files: " + Util.join(mod.getInstances().stream().map(ModInstance::getPath).map(Path::toString))
                             );
@@ -163,10 +148,7 @@ public class CLI {
 
                             println("Downloaders:");
                             for (ModDownloader modDownloader : downloaders) {
-                                println(
-                                        TAB + modDownloader.getName() + ':',
-                                        TAB + TAB + modDownloader.getDescription()
-                                );
+                                println(TAB + modDownloader.getName());
                             }
 
                             println();

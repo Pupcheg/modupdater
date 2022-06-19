@@ -16,43 +16,47 @@ import java.util.StringJoiner;
 
 public class JsonConfig implements Config {
 
+    protected static final String DOWNLOAD_FOLDER_NAME = "download_folder";
+    protected static final String MODS_FOLDER_NAME = "mods_folder";
+    protected static final String MINECRAFT_VERSION_NAME = "minecraft_version";
+    protected static final String MODS_TYPE_NAME = "mods_type";
+    protected static final String CUSTOM_URLS_NAME = "custom_urls";
+
     protected final JsonObject jsonObject;
     protected final Path savePath;
 
-    public JsonConfig(Path path) throws IOException {
+    public JsonConfig(@NotNull Path path) throws IOException {
         this.savePath = path;
         this.jsonObject = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
 
-        boolean b1 = jsonObject.getAsJsonObject("custom_urls") == null;
-        boolean b2 = jsonObject.getAsJsonObject("specific_data") == null;
-        if (b1) jsonObject.add("custom_urls", new JsonObject());
-        if (b2) jsonObject.add("specific_data", new JsonObject());
-        if (b1 || b2) save();
+        if (jsonObject.getAsJsonObject(CUSTOM_URLS_NAME) == null) {
+            jsonObject.add(CUSTOM_URLS_NAME, new JsonObject());
+        }
     }
 
 
     @NotNull
     @Override
     public Path getDownloadFolder() {
-        return Path.of(Objects.requireNonNull(get("download_folder")));
+        return Path.of(Objects.requireNonNull(get(DOWNLOAD_FOLDER_NAME)));
     }
 
     @NotNull
     @Override
     public Path getModsFolder() {
-        return Path.of(Objects.requireNonNull(get("mods_folder")));
+        return Path.of(Objects.requireNonNull(get(MODS_FOLDER_NAME)));
     }
 
     @NotNull
     @Override
     public String getMinecraftVersion() {
-        return Objects.requireNonNull(get("minecraft_version"));
+        return Objects.requireNonNull(get(MINECRAFT_VERSION_NAME));
     }
 
     @NotNull
     @Override
     public ModType getModsType() {
-        return ModType.valueOf(Objects.requireNonNull(get("mods_type")).toUpperCase());
+        return ModType.valueOf(Objects.requireNonNull(get(MODS_TYPE_NAME)).toUpperCase());
     }
 
     @Override
@@ -69,25 +73,13 @@ public class JsonConfig implements Config {
 
     @Override
     public void setCustomUrl(@NotNull Mod mod, @NotNull String value) {
-        jsonObject.getAsJsonObject("custom_urls").addProperty(mod.getId(), value);
+        jsonObject.getAsJsonObject(CUSTOM_URLS_NAME).addProperty(mod.getId(), value);
         save();
     }
 
     @Override
     public String getCustomUrl(@NotNull Mod mod) {
-        JsonElement el = jsonObject.getAsJsonObject("custom_urls").get(mod.getId());
-        return el == null ? null : el.getAsString();
-    }
-
-    @Override
-    public void setSpecificData(@NotNull Mod mod, @NotNull String value) {
-        jsonObject.getAsJsonObject("specific_data").addProperty(mod.getId(), value);
-        save();
-    }
-
-    @Override
-    public String getSpecificData(@NotNull Mod mod) {
-        JsonElement el = jsonObject.getAsJsonObject("specific_data").get(mod.getId());
+        JsonElement el = jsonObject.getAsJsonObject(CUSTOM_URLS_NAME).get(mod.getId());
         return el == null ? null : el.getAsString();
     }
 

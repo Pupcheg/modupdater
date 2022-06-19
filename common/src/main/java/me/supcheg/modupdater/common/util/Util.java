@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.therandomlabs.curseapi.util.OkHttpUtils;
+import me.supcheg.modupdater.common.Updater;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -57,6 +58,7 @@ public class Util {
 
     public static @NotNull List<JsonElement> asList(@NotNull JsonArray array) {
         try {
+            //noinspection unchecked
             return (List<JsonElement>) elementsField.get(array);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -88,5 +90,16 @@ public class Util {
 
     public static @NotNull String join(@NotNull Stream<String> strings) {
         return strings.distinct().collect(joining);
+    }
+
+    public static void validateSameUpdater(@NotNull UpdaterHolder firstHolder, @NotNull UpdaterHolder secondHolder) {
+        Updater first = firstHolder.getUpdater();
+        Updater second = secondHolder.getUpdater();
+
+        if (first != null && second != null && first != second) {
+            String message = "%s and %s has different %s's instances"
+                    .formatted(firstHolder, secondHolder, Updater.class.getSimpleName());
+            throw new IllegalStateException(message);
+        }
     }
 }

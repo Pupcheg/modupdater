@@ -1,12 +1,15 @@
 package me.supcheg.modupdater.common.comparator;
 
+import me.supcheg.modupdater.common.Updater;
+import me.supcheg.modupdater.common.util.UpdaterHolder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.Function;
 
-public abstract class VersionComparator implements Comparator<String> {
+public abstract class VersionComparator implements Comparator<String>, UpdaterHolder {
 
     public static @NotNull VersionComparator from(@NotNull Comparator<String> comparator) {
         if (comparator instanceof VersionComparator versionComparator) {
@@ -24,6 +27,12 @@ public abstract class VersionComparator implements Comparator<String> {
     private volatile VersionComparator reserved;
 
     public VersionComparator() {}
+
+    @Nullable
+    @Override
+    public Updater getUpdater() {
+        return null;
+    }
 
     @Override
     public abstract int compare(String version1, String version2);

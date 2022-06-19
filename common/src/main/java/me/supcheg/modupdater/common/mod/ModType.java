@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 
 public enum ModType {
@@ -24,20 +23,23 @@ public enum ModType {
     public String getName() {
         return name().toLowerCase();
     }
-    
+
     public boolean notContainsOpposite(@NotNull String s) {
         return this.predicate.test(s.toUpperCase());
     }
 
     public static @NotNull EnumSet<ModType> fromStringCollection(@NotNull Collection<String> collection) {
-        var lowerCase = collection.stream().map(String::toLowerCase).collect(Collectors.toSet());
-        var set = EnumSet.noneOf(ModType.class);
+        EnumSet<ModType> set = EnumSet.noneOf(ModType.class);
 
-        if (lowerCase.contains(Names.FORGE)) {
-            set.add(FORGE);
-        }
-        if (lowerCase.contains(Names.FABRIC) || lowerCase.contains(Names.QUILT)) {
-            set.add(ModType.FABRIC);
+        for (String s : collection) {
+            String lowerCase = s.toLowerCase();
+
+            if (lowerCase.contains(Names.FORGE)) {
+                set.add(FORGE);
+            }
+            if (lowerCase.contains(Names.FABRIC) || lowerCase.contains(Names.QUILT)) {
+                set.add(ModType.FABRIC);
+            }
         }
 
         return set;

@@ -34,7 +34,7 @@ public class ModrinthModDownloader extends ModDownloader {
     private final Comparator<JsonObject> fileComparator;
 
     public ModrinthModDownloader(@NotNull Updater updater) {
-        super("Modrinth", "Can download mods from https://modrinth.com. Specific download data: projectId (like 'sodium' or 'appleskin').", updater);
+        super("Modrinth", updater);
 
         this.fileComparator = (o1, o2) -> {
             boolean b1 = o1.get("primary").getAsBoolean();
@@ -72,13 +72,8 @@ public class ModrinthModDownloader extends ModDownloader {
         try {
             Mod mod = downloadConfig.getMod();
 
-            String name;
-            if (mod.getSpecificDownloadData() == null) {
-                String fullUrl = Objects.requireNonNull(mod.getUrl());
-                name = fullUrl.substring(fullUrl.lastIndexOf('/') + 1);
-            } else {
-                name = mod.getSpecificDownloadData();
-            }
+            String fullUrl = Objects.requireNonNull(mod.getUrl());
+            String name = fullUrl.substring(fullUrl.lastIndexOf('/') + 1);
 
             JsonArray versionsIds = getProject(name).getAsJsonArray("versions");
             List<JsonObject> versions = new ArrayList<>(versionsIds.size());
@@ -87,7 +82,7 @@ public class ModrinthModDownloader extends ModDownloader {
             for (int i = 0; i < versionsIds.size(); i++) {
                 versions.add(getVersion(versionsIds.get(i).getAsString()));
             }
-            Comparator<JsonObject> comparator = updater.getVersionComparator().transform(o -> o.get("version_number").getAsString());
+            Comparator<JsonObject> comparator = updater.getVersionComparator().reversed().transform(o -> o.get("version_number").getAsString());
             versions.sort(comparator);
 
             for (JsonObject version : versions) {
@@ -98,6 +93,7 @@ public class ModrinthModDownloader extends ModDownloader {
 
                 SupportInfo info = new SupportInfo(Util.asStringList(gameVersions), ModType.fromStringCollection(Util.asStringList(loaders)));
 
+                System.out.println(info);
                 if (downloadConfig.isCorrect(info)) {
                     // Move 'primary' file(-s) to up and get
                     JsonObject fileInfo = Util.stream(version.getAsJsonArray("files"))
@@ -119,6 +115,7 @@ public class ModrinthModDownloader extends ModDownloader {
                             String sha512 = sha512el.getAsString();
                             for (ModInstance instance : mod.getInstances()) {
                                 Path path = instance.getPath();
+                                //noinspection UnstableApiUsage
                                 String localSha512 = MoreFiles.asByteSource(path).hash(Hashing.sha512()).toString();
                                 if (localSha512.equals(sha512)) {
                                     Files.copy(path, savePath, StandardCopyOption.REPLACE_EXISTING);

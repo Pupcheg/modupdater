@@ -5,35 +5,44 @@ import me.supcheg.modupdater.common.concurrent.IntermediateResultAccessorFunctio
 import me.supcheg.modupdater.common.concurrent.IntermediateResultProcess;
 import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
+import me.supcheg.modupdater.common.util.UpdaterHolder;
+import me.supcheg.modupdater.common.util.Util;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
-public abstract class ModDownloader implements AutoCloseable {
+public abstract class ModDownloader implements AutoCloseable, UpdaterHolder {
+
+    @NotNull
+    @Contract("_, _, _ -> new")
+    public static ModDownloader from(@NotNull String name,
+                                     @NotNull BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> function,
+                                     @NotNull Predicate<String> predicate) {
+        return new SimpleModDownloader(name, function, predicate);
+    }
 
     protected final String name;
-    protected final String description;
     protected final Updater updater;
 
     // If updater is null, don't use it in #downloadLatest
     protected ModDownloader(@NotNull String name, @Nullable Updater updater) {
-        this(name, "", updater);
+        this.name = name;
+        this.updater = updater;
     }
 
-    protected ModDownloader(@NotNull String name, @NotNull String description, @Nullable Updater updater) {
-        this.name = name;
-        this.description = description;
-        this.updater = updater;
+    @Nullable
+    @Override
+    public Updater getUpdater() {
+        return updater;
     }
 
     public @NotNull String getName() {
         return name;
-    }
-
-    public @NotNull String getDescription() {
-        return description;
     }
 
     public boolean canDownload(@NotNull String url) {
@@ -41,6 +50,7 @@ public abstract class ModDownloader implements AutoCloseable {
     }
 
     public @NotNull IntermediateResultAccessorFunction<String, DownloadResult> createFunction(@NotNull DownloadConfig downloadConfig) {
+        Util.validateSameUpdater(this, downloadConfig);
         return accessor -> downloadLatest(accessor, downloadConfig);
     }
 

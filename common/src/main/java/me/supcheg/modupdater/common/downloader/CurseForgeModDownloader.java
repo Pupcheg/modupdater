@@ -25,40 +25,23 @@ import java.util.Set;
 public class CurseForgeModDownloader extends ModDownloader {
 
     public CurseForgeModDownloader(@NotNull Updater updater) {
-        super("CurseForge", "Can download mods from https://www.curseforge.com/minecraft. Specific download data: numeric project id.", updater);
+        super("CurseForge", updater);
     }
 
     @NotNull
     @Override
     protected DownloadResult downloadLatest(@NotNull IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor accessor,
-                                         @NotNull DownloadConfig downloadConfig) {
+                                            @NotNull DownloadConfig downloadConfig) {
 
         Mod mod = downloadConfig.getMod();
 
         try {
-            CurseProject project = null;
 
-            // Get from id if mod have a specified download data
-            String specific = mod.getSpecificDownloadData();
-            if (specific != null) {
-                try {
-                    project = CurseAPI.project(Integer.parseInt(mod.getSpecificDownloadData())).orElseThrow();
-                } catch (Exception ignored) {
-                }
-            }
+            String projectPath = HttpUrl.get(Objects.requireNonNull(mod.getUrl())).encodedPath().replace("projects", "minecraft/mc-mods");
+            CurseProject project = CurseAPI.project(projectPath).orElse(null);
 
-            // Project not found or specified download data is null
             if (project == null) {
-                String projectPath = HttpUrl.get(Objects.requireNonNull(mod.getUrl())).encodedPath().replace("projects", "minecraft/mc-mods");
-                project = CurseAPI.project(projectPath).orElse(null);
-            }
-
-            // Can't find project anyway
-            if (project == null) {
-                return DownloadResult.createError(
-                        "No project match for " + mod.getId(),
-                        "Possible solution: You can change download url or set project id (specific download data)."
-                );
+                return DownloadResult.createError("No project match for %s.".formatted(mod.getId()));
             }
 
             CurseFiles<CurseFile> files = project.files();
