@@ -60,7 +60,7 @@ public class CLI {
         updater = Updater.builder()
                 .defaultDownloaders()
                 .defaultExecutor()
-                .defaultUrlSearcher()
+                .defaultUrlSearchers()
                 .defaultVersionComparator()
                 .config(config)
                 .build();

@@ -7,8 +7,10 @@ import me.supcheg.modupdater.common.concurrent.IntermediateResultProcess;
 import me.supcheg.modupdater.common.config.Config;
 import me.supcheg.modupdater.common.downloader.*;
 import me.supcheg.modupdater.common.mod.Mod;
+import me.supcheg.modupdater.common.searcher.CombinedDownloadUrlSearcher;
 import me.supcheg.modupdater.common.searcher.DefaultDownloadUrlSearcher;
 import me.supcheg.modupdater.common.searcher.DownloadUrlSearcher;
+import me.supcheg.modupdater.common.searcher.RemoteLibraryDownloadUrlSearcher;
 import me.supcheg.modupdater.common.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,7 +49,18 @@ public class Updater implements AutoCloseable, UpdaterHolder {
         }
         this.config = builder.config;
         this.modsMap = new ConcurrentHashMap<>();
-        this.urlSearcher = builder.urlSearcher;
+
+        var searchers = builder.urlSearchers;
+        if (searchers.size() == 1) {
+            this.urlSearcher = searchers.getFirst().apply(this);
+        } else {
+            CombinedDownloadUrlSearcher combined = new CombinedDownloadUrlSearcher();
+            for (var func : searchers) {
+                combined.addLast(func.apply(this));
+            }
+            this.urlSearcher = combined;
+        }
+
         this.versionComparator = builder.versionComparator;
     }
 
@@ -191,17 +204,18 @@ public class Updater implements AutoCloseable, UpdaterHolder {
     public static class Builder {
 
         private final Set<Function<Updater, ModDownloader>> downloaders;
-        private DownloadUrlSearcher urlSearcher;
+        private Deque<Function<Updater, DownloadUrlSearcher>> urlSearchers;
         private VersionComparator versionComparator;
         private Config config;
         private ExecutorService executor;
 
         private Builder() {
             downloaders = new HashSet<>();
+            urlSearchers = new ArrayDeque<>();
         }
 
-        public @NotNull Builder urlSearcher(@NotNull DownloadUrlSearcher urlSearcher) {
-            this.urlSearcher = urlSearcher;
+        public @NotNull Builder addUrlSearcher(@NotNull Function<Updater, DownloadUrlSearcher> urlSearcher) {
+            this.urlSearchers.addLast(urlSearcher);
             return this;
         }
 
@@ -229,8 +243,9 @@ public class Updater implements AutoCloseable, UpdaterHolder {
             return addDownloader(u -> downloader);
         }
 
-        public @NotNull Builder defaultUrlSearcher() {
-            return urlSearcher(new DefaultDownloadUrlSearcher());
+        public @NotNull Builder defaultUrlSearchers() {
+            return addUrlSearcher(RemoteLibraryDownloadUrlSearcher::new)
+                    .addUrlSearcher(u -> new DefaultDownloadUrlSearcher());
         }
 
         public @NotNull Builder defaultVersionComparator() {
@@ -251,7 +266,7 @@ public class Updater implements AutoCloseable, UpdaterHolder {
 
 
         public @NotNull Updater build() {
-            Objects.requireNonNull(urlSearcher);
+            Objects.requireNonNull(urlSearchers);
             Objects.requireNonNull(versionComparator);
             if (downloaders.isEmpty()) {
                 throw new IllegalStateException("Downloaders should not be empty");

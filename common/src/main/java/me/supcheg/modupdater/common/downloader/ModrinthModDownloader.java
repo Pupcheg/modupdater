@@ -2,9 +2,11 @@ package me.supcheg.modupdater.common.downloader;
 
 import com.google.common.hash.Hashing;
 import com.google.common.io.MoreFiles;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import me.supcheg.modupdater.common.Updater;
-import me.supcheg.modupdater.common.util.Util;
 import me.supcheg.modupdater.common.concurrent.IntermediateResultProcess;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.mod.ModInstance;
@@ -12,6 +14,7 @@ import me.supcheg.modupdater.common.mod.ModType;
 import me.supcheg.modupdater.common.mod.SupportInfo;
 import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
+import me.supcheg.modupdater.common.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
@@ -93,7 +96,6 @@ public class ModrinthModDownloader extends ModDownloader {
 
                 SupportInfo info = new SupportInfo(Util.asStringList(gameVersions), ModType.fromStringCollection(Util.asStringList(loaders)));
 
-                System.out.println(info);
                 if (downloadConfig.isCorrect(info)) {
                     // Move 'primary' file(-s) to up and get
                     JsonObject fileInfo = Util.stream(version.getAsJsonArray("files"))
