@@ -26,9 +26,9 @@ public interface Config {
 
     void set(@NotNull String address, @NotNull String value);
 
-    void setCustomUrl(@NotNull Mod mod, @NotNull String value);
+    void setUrl(@NotNull Mod mod, @NotNull String value);
 
     @Nullable
-    String getCustomUrl(@NotNull Mod mod);
+    String getUrl(@NotNull Mod mod);
 }
 

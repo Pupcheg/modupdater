@@ -58,11 +58,11 @@ public class Mod implements UpdaterHolder {
     }
 
     public @Nullable String getUrl() {
-        return updater.getConfig().getCustomUrl(this);
+        return updater.getConfig().getUrl(this);
     }
 
     public void setUrl(@NotNull String url) {
-        updater.getConfig().setCustomUrl(this, url);
+        updater.getConfig().setUrl(this, url);
     }
 
     public void setDownloader(@NotNull ModDownloader downloader) {

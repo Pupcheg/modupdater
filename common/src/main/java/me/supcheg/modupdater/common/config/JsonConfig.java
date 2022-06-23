@@ -20,7 +20,7 @@ public class JsonConfig implements Config {
     protected static final String MODS_FOLDER_NAME = "mods_folder";
     protected static final String MINECRAFT_VERSION_NAME = "minecraft_version";
     protected static final String MODS_TYPE_NAME = "mods_type";
-    protected static final String CUSTOM_URLS_NAME = "custom_urls";
+    protected static final String URLS_NAME = "urls";
 
     protected final JsonObject jsonObject;
     protected final Path savePath;
@@ -29,8 +29,8 @@ public class JsonConfig implements Config {
         this.savePath = path;
         this.jsonObject = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
 
-        if (jsonObject.getAsJsonObject(CUSTOM_URLS_NAME) == null) {
-            jsonObject.add(CUSTOM_URLS_NAME, new JsonObject());
+        if (jsonObject.getAsJsonObject(URLS_NAME) == null) {
+            jsonObject.add(URLS_NAME, new JsonObject());
         }
     }
 
@@ -72,14 +72,14 @@ public class JsonConfig implements Config {
     }
 
     @Override
-    public void setCustomUrl(@NotNull Mod mod, @NotNull String value) {
-        jsonObject.getAsJsonObject(CUSTOM_URLS_NAME).addProperty(mod.getId(), value);
+    public void setUrl(@NotNull Mod mod, @NotNull String value) {
+        jsonObject.getAsJsonObject(URLS_NAME).addProperty(mod.getId(), value);
         save();
     }
 
     @Override
-    public String getCustomUrl(@NotNull Mod mod) {
-        JsonElement el = jsonObject.getAsJsonObject(CUSTOM_URLS_NAME).get(mod.getId());
+    public String getUrl(@NotNull Mod mod) {
+        JsonElement el = jsonObject.getAsJsonObject(URLS_NAME).get(mod.getId());
         return el == null ? null : el.getAsString();
     }
 
