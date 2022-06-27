@@ -2,12 +2,13 @@ package me.supcheg.modupdater.common.config;
 
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.mod.ModType;
+import me.supcheg.modupdater.common.util.UpdaterHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 
-public interface Config {
+public interface Config extends UpdaterHolder {
 
     @NotNull
     Path getDownloadFolder();

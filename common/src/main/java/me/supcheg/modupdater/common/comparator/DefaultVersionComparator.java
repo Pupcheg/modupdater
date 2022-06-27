@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.common.comparator;
 
+import me.supcheg.modupdater.common.Updater;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -10,7 +11,8 @@ public class DefaultVersionComparator extends VersionComparator {
 
     private final Pattern notNumberPattern;
 
-    public DefaultVersionComparator() {
+    public DefaultVersionComparator(@NotNull Updater updater) {
+        super(updater);
         this.notNumberPattern = Pattern.compile("[!A-z]+");
     }
 

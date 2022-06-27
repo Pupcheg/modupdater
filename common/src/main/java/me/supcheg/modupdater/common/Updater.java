@@ -47,21 +47,21 @@ public class Updater implements AutoCloseable, UpdaterHolder {
         for (Function<Updater, ModDownloader> f : builder.downloaders) {
             addDownloader(f.apply(this));
         }
-        this.config = builder.config;
+        this.config = builder.config.apply(this);
         this.modsMap = new ConcurrentHashMap<>();
 
         var searchers = builder.urlSearchers;
         if (searchers.size() == 1) {
             this.urlSearcher = searchers.getFirst().apply(this);
         } else {
-            CombinedDownloadUrlSearcher combined = new CombinedDownloadUrlSearcher();
+            CombinedDownloadUrlSearcher combined = new CombinedDownloadUrlSearcher(this);
             for (var func : searchers) {
                 combined.addLast(func.apply(this));
             }
             this.urlSearcher = combined;
         }
 
-        this.versionComparator = builder.versionComparator;
+        this.versionComparator = builder.versionComparator.apply(this);
     }
 
     public void addDownloader(@NotNull ModDownloader modDownloader) {
@@ -167,7 +167,7 @@ public class Updater implements AutoCloseable, UpdaterHolder {
     public @NotNull IntermediateResultProcess<String, DownloadResult> downloadLatest(@NotNull DownloadConfig downloadConfig,
                                                                                      @Nullable ChangeConsumer<String> onChange,
                                                                                      @Nullable Consumer<DownloadResult> after) {
-        return IntermediateResultProcess.builder(String.class, DownloadResult.class)
+        return IntermediateResultProcess.<String, DownloadResult>builder()
                 .executor(this.downloadExecutor)
                 .function(downloadConfig.getMod().getDownloader().createFunction(downloadConfig))
                 .defaultResult(this.exceptionDownloadResultFunction)
@@ -176,7 +176,7 @@ public class Updater implements AutoCloseable, UpdaterHolder {
                 .run();
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
         return this;
@@ -204,9 +204,9 @@ public class Updater implements AutoCloseable, UpdaterHolder {
     public static class Builder {
 
         private final Set<Function<Updater, ModDownloader>> downloaders;
-        private Deque<Function<Updater, DownloadUrlSearcher>> urlSearchers;
-        private VersionComparator versionComparator;
-        private Config config;
+        private final Deque<Function<Updater, DownloadUrlSearcher>> urlSearchers;
+        private Function<Updater, VersionComparator> versionComparator;
+        private Function<Updater, Config> config;
         private ExecutorService executor;
 
         private Builder() {
@@ -219,12 +219,12 @@ public class Updater implements AutoCloseable, UpdaterHolder {
             return this;
         }
 
-        public @NotNull Builder versionComparator(@NotNull VersionComparator versionComparator) {
+        public @NotNull Builder versionComparator(@NotNull Function<Updater, VersionComparator> versionComparator) {
             this.versionComparator = versionComparator;
             return this;
         }
 
-        public @NotNull Builder config(@NotNull Config config) {
+        public @NotNull Builder config(@NotNull Function<Updater, Config> config) {
             this.config = config;
             return this;
         }
@@ -245,11 +245,11 @@ public class Updater implements AutoCloseable, UpdaterHolder {
 
         public @NotNull Builder defaultUrlSearchers() {
             return addUrlSearcher(RemoteLibraryDownloadUrlSearcher::new)
-                    .addUrlSearcher(u -> new DefaultDownloadUrlSearcher());
+                    .addUrlSearcher(DefaultDownloadUrlSearcher::new);
         }
 
         public @NotNull Builder defaultVersionComparator() {
-            return versionComparator(new DefaultVersionComparator());
+            return versionComparator(DefaultVersionComparator::new);
         }
 
         public @NotNull Builder defaultDownloaders() {

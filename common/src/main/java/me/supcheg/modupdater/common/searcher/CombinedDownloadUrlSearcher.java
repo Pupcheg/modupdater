@@ -12,17 +12,19 @@ import java.util.Objects;
 
 public class CombinedDownloadUrlSearcher extends ArrayDeque<DownloadUrlSearcher> implements DownloadUrlSearcher {
 
-    private Updater updater;
+    private final Updater updater;
 
-    public CombinedDownloadUrlSearcher(@NotNull Collection<DownloadUrlSearcher> searchers) {
+    public CombinedDownloadUrlSearcher(@NotNull Updater updater, @NotNull Collection<DownloadUrlSearcher> searchers) {
         super(searchers);
+        this.updater = updater;
     }
 
-    public CombinedDownloadUrlSearcher() {
+    public CombinedDownloadUrlSearcher(@NotNull Updater updater) {
         super();
+        this.updater = updater;
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
         return updater;
@@ -42,23 +44,15 @@ public class CombinedDownloadUrlSearcher extends ArrayDeque<DownloadUrlSearcher>
         return null;
     }
 
-    private void validate(@NotNull DownloadUrlSearcher searcher) {
-        if (CombinedDownloadUrlSearcher.this.updater == null) {
-            CombinedDownloadUrlSearcher.this.updater = searcher.getUpdater();
-        } else {
-            Util.validateSameUpdater(CombinedDownloadUrlSearcher.this, searcher);
-        }
-    }
-
     @Override
     public void addFirst(@NotNull DownloadUrlSearcher searcher) {
-        validate(searcher);
+        Util.validateSameUpdater(this, searcher);
         super.addFirst(searcher);
     }
 
     @Override
     public void addLast(@NotNull DownloadUrlSearcher searcher) {
-        validate(searcher);
+        Util.validateSameUpdater(this, searcher);
         super.addLast(searcher);
     }
 
@@ -73,10 +67,5 @@ public class CombinedDownloadUrlSearcher extends ArrayDeque<DownloadUrlSearcher>
         if (o == null || getClass() != o.getClass()) return false;
         CombinedDownloadUrlSearcher that = (CombinedDownloadUrlSearcher) o;
         return Objects.equals(updater, that.updater) && super.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
     }
 }

@@ -3,7 +3,6 @@ package me.supcheg.modupdater.common.mod;
 import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.util.UpdaterHolder;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -39,7 +38,7 @@ public class ModInstance implements UpdaterHolder {
         return parent;
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
         return parent.getUpdater();

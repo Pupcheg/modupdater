@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.common.comparator;
 
+import me.supcheg.modupdater.common.Updater;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
@@ -9,7 +10,8 @@ public class SimpleVersionComparator extends VersionComparator {
 
     private final Comparator<String> comparator;
 
-    public SimpleVersionComparator(@NotNull Comparator<String> comparator) {
+    public SimpleVersionComparator(@NotNull Updater updater, @NotNull Comparator<String> comparator) {
+        super(updater);
         Objects.requireNonNull(comparator, "Comparator is null");
         this.comparator = comparator;
     }

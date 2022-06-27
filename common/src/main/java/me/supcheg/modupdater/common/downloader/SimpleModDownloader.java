@@ -1,5 +1,6 @@
 package me.supcheg.modupdater.common.downloader;
 
+import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.concurrent.IntermediateResultProcess;
 import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
@@ -13,10 +14,11 @@ public class SimpleModDownloader extends ModDownloader {
     private final BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> downloadFunction;
     private final Predicate<String> canDownloadPredicate;
 
-    public SimpleModDownloader(@NotNull String name,
+    public SimpleModDownloader(@NotNull Updater updater,
+                               @NotNull String name,
                                @NotNull BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> function,
                                @NotNull Predicate<String> predicate) {
-        super(name, null);
+        super(name, updater);
         this.downloadFunction = function;
         this.canDownloadPredicate = predicate;
     }

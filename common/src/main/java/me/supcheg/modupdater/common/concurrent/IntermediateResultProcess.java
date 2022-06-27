@@ -14,14 +14,8 @@ import java.util.function.Function;
 public class IntermediateResultProcess<I, R> {
 
     @NotNull
-    public static <I, R> IntermediateResultProcess<I, R> completed(@NotNull Class<I> intermediateResultClass, R result) {
+    public static <I, R> IntermediateResultProcess<I, R> completed(R result) {
         return new IntermediateResultProcess<>(result);
-    }
-
-    @NotNull
-    @Contract(value = "_, _ -> new", pure = true)
-    public static <I, R> Builder<I, R> builder(@Nullable Class<I> intermediateResultClass, @Nullable Class<R> resultClass) {
-        return new Builder<>();
     }
 
     @NotNull

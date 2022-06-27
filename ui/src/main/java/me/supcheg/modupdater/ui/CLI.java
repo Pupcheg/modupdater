@@ -56,14 +56,20 @@ public class CLI {
             firstLaunch = true;
         }
 
-        config = new JsonConfig(configPath);
         updater = Updater.builder()
                 .defaultDownloaders()
                 .defaultExecutor()
                 .defaultUrlSearchers()
                 .defaultVersionComparator()
-                .config(config)
+                .config(u -> {
+                    try {
+                        return new JsonConfig(u, configPath);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
                 .build();
+        config = (JsonConfig) updater.getConfig();
         if (!firstLaunch) {
             updater.reloadDefaultModsFolder();
         }

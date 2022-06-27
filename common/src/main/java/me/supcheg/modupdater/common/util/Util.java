@@ -96,7 +96,7 @@ public class Util {
         Updater first = firstHolder.getUpdater();
         Updater second = secondHolder.getUpdater();
 
-        if (first != null && second != null && first != second) {
+        if (first != second) {
             String message = "%s and %s has different %s's instances"
                     .formatted(firstHolder, secondHolder, Updater.class.getSimpleName());
             throw new IllegalStateException(message);

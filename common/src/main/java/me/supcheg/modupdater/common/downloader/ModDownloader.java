@@ -9,7 +9,6 @@ import me.supcheg.modupdater.common.util.UpdaterHolder;
 import me.supcheg.modupdater.common.util.Util;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -19,23 +18,24 @@ import java.util.function.Predicate;
 public abstract class ModDownloader implements AutoCloseable, UpdaterHolder {
 
     @NotNull
-    @Contract("_, _, _ -> new")
-    public static ModDownloader from(@NotNull String name,
+    @Contract("_, _, _, _ -> new")
+    public static ModDownloader from(@NotNull Updater updater,
+                                     @NotNull String name,
                                      @NotNull BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> function,
                                      @NotNull Predicate<String> predicate) {
-        return new SimpleModDownloader(name, function, predicate);
+        return new SimpleModDownloader(updater, name, function, predicate);
     }
 
     protected final String name;
     protected final Updater updater;
 
     // If updater is null, don't use it in #downloadLatest
-    protected ModDownloader(@NotNull String name, @Nullable Updater updater) {
+    protected ModDownloader(@NotNull String name, @NotNull Updater updater) {
         this.name = name;
         this.updater = updater;
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
         return updater;

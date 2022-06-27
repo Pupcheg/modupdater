@@ -73,7 +73,7 @@ public class Mod implements UpdaterHolder {
         return downloader;
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
         return updater;

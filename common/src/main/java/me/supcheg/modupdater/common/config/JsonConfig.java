@@ -3,6 +3,7 @@ package me.supcheg.modupdater.common.config;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.util.Util;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.mod.ModType;
@@ -22,10 +23,12 @@ public class JsonConfig implements Config {
     protected static final String MODS_TYPE_NAME = "mods_type";
     protected static final String URLS_NAME = "urls";
 
+    protected final Updater updater;
     protected final JsonObject jsonObject;
     protected final Path savePath;
 
-    public JsonConfig(@NotNull Path path) throws IOException {
+    public JsonConfig(@NotNull Updater updater, @NotNull Path path) throws IOException {
+        this.updater = updater;
         this.savePath = path;
         this.jsonObject = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
 
@@ -34,6 +37,11 @@ public class JsonConfig implements Config {
         }
     }
 
+    @NotNull
+    @Override
+    public Updater getUpdater() {
+        return updater;
+    }
 
     @NotNull
     @Override

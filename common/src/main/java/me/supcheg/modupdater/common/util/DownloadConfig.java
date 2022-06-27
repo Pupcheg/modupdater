@@ -53,7 +53,7 @@ public class DownloadConfig implements UpdaterHolder {
         return name != null && modType.notContainsOpposite(name) && name.contains(minecraftVersion);
     }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
         return mod.getUpdater();

@@ -7,6 +7,7 @@ import com.therandomlabs.curseapi.CurseAPI;
 import com.therandomlabs.curseapi.CurseException;
 import com.therandomlabs.curseapi.project.CurseProject;
 import com.therandomlabs.curseapi.project.CurseSearchQuery;
+import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.downloader.ModrinthModDownloader;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.util.Util;
@@ -15,7 +16,17 @@ import org.jetbrains.annotations.Nullable;
 
 public class DefaultDownloadUrlSearcher implements DownloadUrlSearcher {
 
-    public DefaultDownloadUrlSearcher() {}
+    private final Updater updater;
+
+    public DefaultDownloadUrlSearcher(@NotNull Updater updater) {
+        this.updater = updater;
+    }
+
+    @NotNull
+    @Override
+    public Updater getUpdater() {
+        return updater;
+    }
 
     @Nullable
     @Override

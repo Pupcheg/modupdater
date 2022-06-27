@@ -5,48 +5,36 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.mod.Mod;
+import me.supcheg.modupdater.common.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.StringJoiner;
 
 public class RemoteLibraryDownloadUrlSearcher implements DownloadUrlSearcher {
 
-    public static final URL MAIN_LIB_URL;
-
-    static {
-        try {
-            MAIN_LIB_URL = new URL("https://pastebin.com/raw/1J1rH2iN");
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public static final String MAIN_LIB_URL = "https://pastebin.com/raw/1J1rH2iN";
 
     private final Updater updater;
-    private final URL libUrl;
+    private final String libUrl;
     private final Path downloadPath;
 
     private volatile JsonObject jsonObject;
 
     public RemoteLibraryDownloadUrlSearcher(@NotNull Updater updater) {
-        this(MAIN_LIB_URL, updater);
+        this(updater, MAIN_LIB_URL);
     }
 
-    public RemoteLibraryDownloadUrlSearcher(@NotNull URL url, @NotNull Updater updater) {
+    public RemoteLibraryDownloadUrlSearcher(@NotNull Updater updater, @NotNull String url) {
         this.libUrl = url;
         this.updater = updater;
 
-        String urlString = url.toString();
-        String fileName = urlString.substring(urlString.lastIndexOf('/') + 1);
+        String fileName = url.substring(url.lastIndexOf('/') + 1);
         if (!fileName.endsWith(".json")) {
             fileName += ".json";
         }
@@ -55,9 +43,7 @@ public class RemoteLibraryDownloadUrlSearcher implements DownloadUrlSearcher {
 
     public void refresh(boolean download) throws IOException {
         if (download) {
-            try (InputStream in = libUrl.openStream()) {
-                Files.copy(in, downloadPath, StandardCopyOption.REPLACE_EXISTING);
-            }
+            Files.writeString(downloadPath, Util.read(libUrl));
         }
 
         if (Files.notExists(downloadPath)) {

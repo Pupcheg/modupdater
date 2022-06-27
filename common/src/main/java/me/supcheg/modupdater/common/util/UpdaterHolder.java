@@ -6,7 +6,7 @@ import me.supcheg.modupdater.common.downloader.ModDownloader;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.mod.ModInstance;
 import me.supcheg.modupdater.common.searcher.DownloadUrlSearcher;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents an object that somehow has {@link Updater} instance
@@ -18,6 +18,6 @@ import org.jetbrains.annotations.Nullable;
  * @see DownloadConfig
  */
 public interface UpdaterHolder {
-    @Nullable
+    @NotNull
     Updater getUpdater();
 }

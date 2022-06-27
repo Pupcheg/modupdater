@@ -2,8 +2,8 @@ package me.supcheg.modupdater.common.comparator;
 
 import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.util.UpdaterHolder;
+import me.supcheg.modupdater.common.util.Util;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Objects;
@@ -11,11 +11,12 @@ import java.util.function.Function;
 
 public abstract class VersionComparator implements Comparator<String>, UpdaterHolder {
 
-    public static @NotNull VersionComparator from(@NotNull Comparator<String> comparator) {
+    public static @NotNull VersionComparator from(@NotNull Updater updater, @NotNull Comparator<String> comparator) {
         if (comparator instanceof VersionComparator versionComparator) {
+            Util.validateSameUpdater(updater, versionComparator);
             return versionComparator;
         } else {
-            return new SimpleVersionComparator(comparator);
+            return new SimpleVersionComparator(updater, comparator);
         }
     }
 
@@ -24,14 +25,17 @@ public abstract class VersionComparator implements Comparator<String>, UpdaterHo
     public static final String BETA = "beta";
     public static final String RELEASE = "release";
 
+    private final Updater updater;
     private volatile VersionComparator reserved;
 
-    public VersionComparator() {}
+    public VersionComparator(@NotNull Updater updater) {
+        this.updater = updater;
+    }
 
-    @Nullable
+    @NotNull
     @Override
     public Updater getUpdater() {
-        return null;
+        return updater;
     }
 
     @Override
@@ -46,7 +50,7 @@ public abstract class VersionComparator implements Comparator<String>, UpdaterHo
         if (reserved == null) {
             synchronized (this) {
                 if (reserved == null) {
-                    reserved = new Reserved();
+                    reserved = new Reserved(updater);
                 }
             }
         }
@@ -79,6 +83,10 @@ public abstract class VersionComparator implements Comparator<String>, UpdaterHo
     }
 
     private class Reserved extends VersionComparator {
+
+        public Reserved(@NotNull Updater updater) {
+            super(updater);
+        }
 
         @Override
         public int compare(String v1, String v2) {
