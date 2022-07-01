@@ -3,17 +3,24 @@ package me.supcheg.modupdater.common.comparator;
 import me.supcheg.modupdater.common.Updater;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
+import java.util.*;
 import java.util.function.IntSupplier;
 import java.util.regex.Pattern;
 
 public class DefaultVersionComparator extends VersionComparator {
 
+    private final Collection<String> minecraftVersions;
     private final Pattern notNumberPattern;
 
     public DefaultVersionComparator(@NotNull Updater updater) {
         super(updater);
-        this.notNumberPattern = Pattern.compile("[!A-z]+");
+        this.notNumberPattern = Pattern.compile("[\\D\\[\\]]+");
+
+        this.minecraftVersions = List.of(
+                "1.19.1", "1.19",
+                "1.18.2", "1.18.1", "1.18",
+                "1.17.1", "1.17"
+        );
     }
 
     @Override
@@ -33,27 +40,24 @@ public class DefaultVersionComparator extends VersionComparator {
 
     @NotNull
     private VersionInfo asVersionInfo(@NotNull String versionString) {
-        String[] split = notNumberPattern.split(versionString);
-
-        if (split.length > 3) {
-            String[] newSplit = new String[3];
-            System.arraycopy(split, split.length - 3, newSplit, 0, newSplit.length);
-            split = newSplit;
+        for (String minecraftVersion : minecraftVersions) {
+            versionString = versionString.replace(minecraftVersion, "");
         }
+        List<String> split = new ArrayList<>(Arrays.asList(notNumberPattern.split(versionString)));
+        split.removeIf(String::isEmpty);
 
-        int major = asInt(split[0]);
-        int minor = split.length > 1 ? asInt(split[1]) : 0;
-        int maintenance = split.length > 2 ? asInt(split[2]) : 0;
+        if (split.size() > 3) {
+            split = split.subList(split.size() - 3, split.size());
+        }
+        int major = asInt(split.get(0));
+        int minor = split.size() > 1 ? asInt(split.get(1)) : 0;
+        int maintenance = split.size() > 2 ? asInt(split.get(2)) : 0;
 
         return new VersionInfo(versionString, major, minor, maintenance);
     }
 
     private int asInt(@NotNull String version) {
-        try {
-            return Integer.parseInt(version.trim());
-        } catch (Exception e) {
-            return 0;
-        }
+        return Integer.parseInt(version.trim());
     }
 
     @Override
@@ -111,6 +115,19 @@ public class DefaultVersionComparator extends VersionComparator {
                         return 0;
                     })
                     .build();
+        }
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", VersionInfo.class.getSimpleName() + "[", "]")
+                    .add("full='" + full + "'")
+                    .add("major=" + major)
+                    .add("minor=" + minor)
+                    .add("maintenance=" + maintenance)
+                    .add("isAlpha=" + isAlpha)
+                    .add("isBeta=" + isBeta)
+                    .add("isRelease=" + isRelease)
+                    .toString();
         }
     }
 
