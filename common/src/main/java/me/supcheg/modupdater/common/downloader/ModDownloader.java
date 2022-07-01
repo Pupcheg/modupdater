@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 public abstract class ModDownloader implements AutoCloseable, UpdaterHolder {
@@ -21,7 +20,7 @@ public abstract class ModDownloader implements AutoCloseable, UpdaterHolder {
     @Contract("_, _, _, _ -> new")
     public static ModDownloader from(@NotNull Updater updater,
                                      @NotNull String name,
-                                     @NotNull BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> function,
+                                     @NotNull SimpleModDownloader.DownloadFunction function,
                                      @NotNull Predicate<String> predicate) {
         return new SimpleModDownloader(updater, name, function, predicate);
     }

@@ -6,17 +6,16 @@ import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 public class SimpleModDownloader extends ModDownloader {
 
-    private final BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> downloadFunction;
+    private final DownloadFunction downloadFunction;
     private final Predicate<String> canDownloadPredicate;
 
     public SimpleModDownloader(@NotNull Updater updater,
                                @NotNull String name,
-                               @NotNull BiFunction<IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor, DownloadConfig, DownloadResult> function,
+                               @NotNull DownloadFunction function,
                                @NotNull Predicate<String> predicate) {
         super(name, updater);
         this.downloadFunction = function;
@@ -27,11 +26,22 @@ public class SimpleModDownloader extends ModDownloader {
     @Override
     protected DownloadResult downloadLatest(@NotNull IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor accessor,
                                             @NotNull DownloadConfig downloadConfig) {
-        return downloadFunction.apply(accessor, downloadConfig);
+        try {
+            return downloadFunction.download(accessor, downloadConfig, updater);
+        } catch (Exception e) {
+            return DownloadResult.createError(e);
+        }
     }
 
     @Override
     public boolean canDownload(@NotNull String url) {
         return canDownloadPredicate.test(url);
+    }
+
+    public interface DownloadFunction {
+        @NotNull
+        DownloadResult download(@NotNull IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor accessor,
+                                @NotNull DownloadConfig downloadConfig,
+                                @NotNull Updater updater);
     }
 }
