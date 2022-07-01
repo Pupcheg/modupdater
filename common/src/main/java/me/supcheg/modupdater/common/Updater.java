@@ -239,10 +239,6 @@ public class Updater implements AutoCloseable, UpdaterHolder {
             return this;
         }
 
-        public @NotNull Builder addDownloader(@NotNull ModDownloader downloader) {
-            return addDownloader(u -> downloader);
-        }
-
         public @NotNull Builder defaultUrlSearchers() {
             return addUrlSearcher(RemoteLibraryDownloadUrlSearcher::new)
                     .addUrlSearcher(DefaultDownloadUrlSearcher::new);
@@ -261,13 +257,15 @@ public class Updater implements AutoCloseable, UpdaterHolder {
         }
 
         public @NotNull Builder defaultExecutor() {
-            return executor(Executors.newSingleThreadExecutor());
+            return executor(Executors.newFixedThreadPool(3));
         }
 
 
         public @NotNull Updater build() {
-            Objects.requireNonNull(urlSearchers);
             Objects.requireNonNull(versionComparator);
+            if (urlSearchers.isEmpty()) {
+                throw new IllegalStateException("UrlSearchers should not be empty");
+            }
             if (downloaders.isEmpty()) {
                 throw new IllegalStateException("Downloaders should not be empty");
             }
