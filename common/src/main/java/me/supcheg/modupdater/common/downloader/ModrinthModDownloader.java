@@ -39,15 +39,7 @@ public class ModrinthModDownloader extends ModDownloader {
     public ModrinthModDownloader(@NotNull Updater updater) {
         super("Modrinth", updater);
 
-        this.fileComparator = (o1, o2) -> {
-            boolean b1 = o1.get("primary").getAsBoolean();
-            boolean b2 = o2.get("primary").getAsBoolean();
-
-            if (b1 == b2) {
-                return 0;
-            }
-            return b1 ? 1 : -1;
-        };
+        this.fileComparator = Comparator.comparing(o -> o.get("primary").getAsBoolean());
     }
 
     private static @NotNull JsonObject getProject(@NotNull String nameOrId) {
