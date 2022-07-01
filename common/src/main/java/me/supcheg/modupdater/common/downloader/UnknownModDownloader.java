@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class UnknownModDownloader extends ModDownloader {
 
@@ -33,7 +34,7 @@ public class UnknownModDownloader extends ModDownloader {
             ModInstance latest = mod.getLatestInstance();
 
             Path downloadPath = downloadConfig.getDownloadFolder().resolve(latest.getPath().getFileName());
-            Files.copy(latest.getPath(), downloadPath);
+            Files.copy(latest.getPath(), downloadPath, StandardCopyOption.REPLACE_EXISTING);
 
             return DownloadResult.createSuccess(mod.createInstance(downloadPath));
         } catch (IOException e) {
