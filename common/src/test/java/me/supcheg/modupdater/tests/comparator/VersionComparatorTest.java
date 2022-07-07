@@ -70,8 +70,7 @@ public class VersionComparatorTest {
             try {
                 result = ComparingResult.fromInt(comparator.compare(version1, version2));
             } catch (Exception ex) {
-                System.out.println("'%s' and '%s'".formatted(version1, version2));
-                throw ex;
+                throw new RuntimeException("'%s' and '%s'".formatted(version1, version2), ex);
             }
 
             assertSame(expectedResult, result, "%s: '%s' and '%s'".formatted(comparatorName, version1, version2));
