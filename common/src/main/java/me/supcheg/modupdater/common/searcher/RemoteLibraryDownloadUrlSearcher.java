@@ -9,7 +9,6 @@ import me.supcheg.modupdater.common.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,16 +40,24 @@ public class RemoteLibraryDownloadUrlSearcher implements DownloadUrlSearcher {
         this.downloadPath = updater.getConfig().getDownloadFolder().resolve(fileName);
     }
 
-    public void refresh(boolean download) throws IOException {
-        if (download) {
-            Files.writeString(downloadPath, Util.read(libUrl));
+    public void refresh(boolean downloadIfExists) throws IOException {
+        if (Files.exists(downloadPath)) {
+            if (downloadIfExists) {
+                synchronized(this) {
+                    this.jsonObject = Util.readJson(updater.getHttpClient(), libUrl).getAsJsonObject();
+                }
+                Files.writeString(downloadPath, jsonObject.toString());
+            } else {
+                synchronized(this) {
+                    this.jsonObject = JsonParser.parseString(Files.readString(downloadPath)).getAsJsonObject();
+                }
+            }
+        } else {
+            synchronized(this) {
+                this.jsonObject = Util.readJson(updater.getHttpClient(), libUrl).getAsJsonObject();
+            }
+            Files.writeString(downloadPath, jsonObject.toString());
         }
-
-        if (Files.notExists(downloadPath)) {
-            throw new FileNotFoundException();
-        }
-
-        this.jsonObject = JsonParser.parseString(Files.readString(downloadPath)).getAsJsonObject();
     }
 
     @Nullable
@@ -58,9 +65,9 @@ public class RemoteLibraryDownloadUrlSearcher implements DownloadUrlSearcher {
     public String find(@NotNull Mod mod) {
         try {
             if (jsonObject == null) {
-                synchronized (this) {
+                synchronized(this) {
                     if (jsonObject == null) {
-                        refresh(true);
+                        refresh(false);
                     }
                 }
             }

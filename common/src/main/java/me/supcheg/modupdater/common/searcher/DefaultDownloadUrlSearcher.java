@@ -2,7 +2,6 @@ package me.supcheg.modupdater.common.searcher;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.therandomlabs.curseapi.CurseAPI;
 import com.therandomlabs.curseapi.CurseException;
 import com.therandomlabs.curseapi.project.CurseProject;
@@ -42,13 +41,16 @@ public class DefaultDownloadUrlSearcher implements DownloadUrlSearcher {
 
     private @Nullable String findModrinth(@NotNull String[] searchingArray) {
         for (String searching : searchingArray) {
-            JsonObject response = JsonParser.parseString(Util.read(ModrinthModDownloader.SEARCH.formatted(searching))).getAsJsonObject();
-            JsonArray hits = response.getAsJsonArray("hits");
-            if (hits != null && !hits.isEmpty()) {
-                String slug = hits.get(0).getAsJsonObject().get("slug").getAsString();
-                if (countSimilarity(slug, searching) >= 0.6) {
-                    return "https://modrinth.com/mod/" + slug;
+            try {
+                JsonObject response = Util.readJson(updater.getHttpClient(), ModrinthModDownloader.SEARCH.formatted(searching)).getAsJsonObject();
+                JsonArray hits = response.getAsJsonArray("hits");
+                if (hits != null && !hits.isEmpty()) {
+                    String slug = hits.get(0).getAsJsonObject().get("slug").getAsString();
+                    if (countSimilarity(slug, searching) >= 0.6) {
+                        return "https://modrinth.com/mod/" + slug;
+                    }
                 }
+            } catch (Exception ignored) {
             }
         }
 

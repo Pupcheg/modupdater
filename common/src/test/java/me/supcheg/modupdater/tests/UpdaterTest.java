@@ -15,6 +15,7 @@ public class UpdaterTest {
 
     static {
         UPDATER = Updater.builder()
+                .defaultHttpClient()
                 .defaultDownloaders()
                 .defaultExecutor()
                 .defaultUrlSearchers()

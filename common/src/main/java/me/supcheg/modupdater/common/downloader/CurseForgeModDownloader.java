@@ -11,14 +11,11 @@ import me.supcheg.modupdater.common.mod.ModType;
 import me.supcheg.modupdater.common.mod.SupportInfo;
 import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
+import me.supcheg.modupdater.common.util.Util;
 import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.Set;
 
@@ -57,11 +54,8 @@ public class CurseForgeModDownloader extends ModDownloader {
                 accessor.set("Downloading file");
 
                 Path download = downloadConfig.getDownloadFolder().resolve(file.nameOnDisk());
-                try (InputStream in = file.downloadURL().url().openStream()) {
-                    Files.copy(in, download, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    return DownloadResult.createError(e);
-                }
+
+                Util.copy(file.downloadURL(), download, updater.getHttpClient());
                 return DownloadResult.createSuccess(mod.createInstance(download));
             }
 

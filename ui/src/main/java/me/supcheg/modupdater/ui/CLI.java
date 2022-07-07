@@ -57,6 +57,7 @@ public class CLI {
         }
 
         updater = Updater.builder()
+                .defaultHttpClient()
                 .defaultDownloaders()
                 .defaultExecutor()
                 .defaultUrlSearchers()

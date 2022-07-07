@@ -12,12 +12,14 @@ import me.supcheg.modupdater.common.searcher.DefaultDownloadUrlSearcher;
 import me.supcheg.modupdater.common.searcher.DownloadUrlSearcher;
 import me.supcheg.modupdater.common.searcher.RemoteLibraryDownloadUrlSearcher;
 import me.supcheg.modupdater.common.util.*;
+import okhttp3.OkHttpClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -37,10 +39,12 @@ public class Updater implements AutoCloseable, UpdaterHolder {
     private final Map<String, ModDownloader> downloadersMap;
     private final Config config;
     private final Map<String, Mod> modsMap;
+    private OkHttpClient httpClient;
     private DownloadUrlSearcher urlSearcher;
     private VersionComparator versionComparator;
 
     private Updater(@NotNull Builder builder) {
+        this.httpClient = builder.httpClient;
         this.downloadExecutor = builder.executor;
         this.exceptionDownloadResultFunction = DownloadResult::createError;
         this.downloadersMap = new ConcurrentHashMap<>();
@@ -62,6 +66,14 @@ public class Updater implements AutoCloseable, UpdaterHolder {
         }
 
         this.versionComparator = builder.versionComparator.apply(this);
+    }
+
+    public @NotNull OkHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public void setHttpClient(@NotNull OkHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     public void addDownloader(@NotNull ModDownloader modDownloader) {
@@ -205,6 +217,7 @@ public class Updater implements AutoCloseable, UpdaterHolder {
 
         private final Set<Function<Updater, ModDownloader>> downloaders;
         private final Deque<Function<Updater, DownloadUrlSearcher>> urlSearchers;
+        private OkHttpClient httpClient;
         private Function<Updater, VersionComparator> versionComparator;
         private Function<Updater, Config> config;
         private ExecutorService executor;
@@ -221,6 +234,11 @@ public class Updater implements AutoCloseable, UpdaterHolder {
 
         public @NotNull Builder versionComparator(@NotNull Function<Updater, VersionComparator> versionComparator) {
             this.versionComparator = versionComparator;
+            return this;
+        }
+
+        public @NotNull Builder httpClient(@NotNull OkHttpClient httpClient) {
+            this.httpClient = httpClient;
             return this;
         }
 
@@ -248,6 +266,17 @@ public class Updater implements AutoCloseable, UpdaterHolder {
             return versionComparator(DefaultVersionComparator::new);
         }
 
+        public @NotNull Builder defaultHttpClient() {
+            Duration defaultTimeout = Duration.ofMillis(5000);
+
+            return httpClient(new OkHttpClient.Builder()
+                    .connectTimeout(defaultTimeout)
+                    .readTimeout(defaultTimeout)
+                    .writeTimeout(defaultTimeout)
+                    .retryOnConnectionFailure(true)
+                    .build());
+        }
+
         public @NotNull Builder defaultDownloaders() {
             addDownloader(CurseForgeModDownloader::new);
             addDownloader(GitHubModDownloader::new);
@@ -262,6 +291,7 @@ public class Updater implements AutoCloseable, UpdaterHolder {
 
 
         public @NotNull Updater build() {
+            Objects.requireNonNull(httpClient);
             Objects.requireNonNull(versionComparator);
             if (urlSearchers.isEmpty()) {
                 throw new IllegalStateException("UrlSearchers should not be empty");

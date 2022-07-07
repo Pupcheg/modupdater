@@ -5,7 +5,6 @@ import com.google.common.io.MoreFiles;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import me.supcheg.modupdater.common.Updater;
 import me.supcheg.modupdater.common.concurrent.IntermediateResultProcess;
 import me.supcheg.modupdater.common.mod.Mod;
@@ -15,10 +14,9 @@ import me.supcheg.modupdater.common.mod.SupportInfo;
 import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
 import me.supcheg.modupdater.common.util.Util;
+import okhttp3.HttpUrl;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -42,24 +40,6 @@ public class ModrinthModDownloader extends ModDownloader {
         this.fileComparator = Comparator.comparing(o -> o.get("primary").getAsBoolean());
     }
 
-    private static @NotNull JsonObject getProject(@NotNull String nameOrId) {
-        String notParsed = Util.read(PROJECT.formatted(nameOrId));
-        try {
-            return JsonParser.parseString(notParsed).getAsJsonObject();
-        } catch (IllegalStateException e) {
-            throw new IllegalStateException("An error occurred while parsing json string: " + notParsed, e);
-        }
-    }
-
-    private static @NotNull JsonObject getVersion(@NotNull String id) {
-        String notParsed = Util.read(VERSION.formatted(id));
-        try {
-            return JsonParser.parseString(notParsed).getAsJsonObject();
-        } catch (IllegalStateException e) {
-            throw new IllegalStateException("An error occurred while parsing json string: " + notParsed, e);
-        }
-    }
-
     @NotNull
     @Override
     protected DownloadResult downloadLatest(@NotNull IntermediateResultProcess<String, DownloadResult>.IntermediateResultAccessor accessor,
@@ -70,12 +50,15 @@ public class ModrinthModDownloader extends ModDownloader {
             String fullUrl = Objects.requireNonNull(mod.getUrl());
             String name = fullUrl.substring(fullUrl.lastIndexOf('/') + 1);
 
-            JsonArray versionsIds = getProject(name).getAsJsonArray("versions");
+            JsonArray versionsIds = Util.readJson(updater.getHttpClient(), PROJECT.formatted(name))
+                    .getAsJsonObject()
+                    .getAsJsonArray("versions");
             List<JsonObject> versions = new ArrayList<>(versionsIds.size());
 
             accessor.set("Loading versions");
             for (int i = 0; i < versionsIds.size(); i++) {
-                versions.add(getVersion(versionsIds.get(i).getAsString()));
+                JsonElement e = Util.readJson(updater.getHttpClient(), VERSION.formatted(versionsIds.get(i)));
+                versions.add(e.getAsJsonObject());
             }
             Comparator<JsonObject> comparator = updater.getVersionComparator().reversed().transform(o -> o.get("version_number").getAsString());
             versions.sort(comparator);
@@ -120,10 +103,8 @@ public class ModrinthModDownloader extends ModDownloader {
                     }
 
                     accessor.set("Downloading file");
-                    try (InputStream in = new URL(url).openStream()) {
-                        Files.copy(in, savePath, StandardCopyOption.REPLACE_EXISTING);
-                        return DownloadResult.createSuccess(mod.createInstance(savePath));
-                    }
+                    Util.copy(HttpUrl.get(url), savePath, updater.getHttpClient());
+                    return DownloadResult.createSuccess(mod.createInstance(savePath));
                 }
             }
             return DownloadResult.createError("No valid versions");

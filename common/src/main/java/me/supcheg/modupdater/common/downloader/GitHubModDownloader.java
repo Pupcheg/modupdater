@@ -1,18 +1,21 @@
 package me.supcheg.modupdater.common.downloader;
 
 import me.supcheg.modupdater.common.Updater;
-import me.supcheg.modupdater.common.util.Util;
 import me.supcheg.modupdater.common.concurrent.IntermediateResultProcess;
 import me.supcheg.modupdater.common.mod.Mod;
 import me.supcheg.modupdater.common.util.DownloadConfig;
 import me.supcheg.modupdater.common.util.DownloadResult;
+import me.supcheg.modupdater.common.util.Util;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import org.kohsuke.github.*;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -28,6 +31,7 @@ import java.util.zip.ZipInputStream;
 public class GitHubModDownloader extends ModDownloader {
 
     private final Predicate<String> notContainsPredicate;
+    private final Predicate<GHAsset> notContainsPredicateAsset;
     private volatile GitHub github;
 
     public GitHubModDownloader(@NotNull Updater updater) {
@@ -42,6 +46,7 @@ public class GitHubModDownloader extends ModDownloader {
             }
             return true;
         };
+        notContainsPredicateAsset = a -> notContainsPredicate.test(a.getName());
     }
 
     private @NotNull GitHub getGithub() {
@@ -53,7 +58,7 @@ public class GitHubModDownloader extends ModDownloader {
                         if (token == null) {
                             throw new IllegalStateException("'github_token' is not set in the config");
                         }
-                        github = GitHubBuilder.fromEnvironment().withOAuthToken(token).build();
+                        github = new GitHubBuilder().withOAuthToken(token).build();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -74,7 +79,16 @@ public class GitHubModDownloader extends ModDownloader {
             GHRepository repo = getGithub().getRepository(repoName);
 
             for (GHArtifact artifact : repo.listArtifacts()) {
-                DownloadResult result = artifact.download(i -> downloadFromArtifact(accessor, mod, downloadConfig, i));
+                DownloadResult result;
+
+                Request req = new Request.Builder().url(artifact.getArchiveDownloadUrl()).build();
+                try (Response response = updater.getHttpClient().newCall(req).execute()) {
+                    ResponseBody body = response.body();
+                    if (body == null) {
+                        throw new NullPointerException("ResponseBody is null");
+                    }
+                    result = downloadFromArtifact(accessor, mod, downloadConfig, body.byteStream());
+                }
                 if (result.isSuccess()) {
                     return result;
                 }
@@ -83,7 +97,7 @@ public class GitHubModDownloader extends ModDownloader {
             for (GHRelease release : repo.listReleases()) {
                 Optional<GHAsset> assetOptional = Util.stream(release.listAssets())
                         .filter(g -> downloadConfig.isCorrect(g.getName()))
-                        .filter(a -> notContainsPredicate.test(a.getName()))
+                        .filter(notContainsPredicateAsset)
                         .findFirst();
 
                 if (assetOptional.isPresent()) {
@@ -91,9 +105,7 @@ public class GitHubModDownloader extends ModDownloader {
                     Path download = downloadConfig.getDownloadFolder().resolve(asset.getName());
 
                     accessor.set("Downloading release");
-                    try (InputStream in = new URL(asset.getBrowserDownloadUrl()).openStream()) {
-                        Files.copy(in, download, StandardCopyOption.REPLACE_EXISTING);
-                    }
+                    Util.copy(HttpUrl.get(asset.getBrowserDownloadUrl()), download, updater.getHttpClient());
                     return DownloadResult.createSuccess(mod.createInstance(download));
                 }
             }
